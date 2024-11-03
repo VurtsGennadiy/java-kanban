@@ -7,9 +7,15 @@ public class Subtask extends Task {
         epic = new Epic();
     }
 
+    public Subtask(String name, String description) {
+        super(name, description);
+        epic = new Epic();
+    }
+
     public Subtask(String name, String description, Epic epic) {
         super(name, description);
         this.epic = epic;
+        epic.addSubtask(this);
     }
 
     public Epic getEpic() {
