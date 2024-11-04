@@ -1,7 +1,6 @@
 package service;
 
 import model.*;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -35,10 +34,15 @@ public class TaskManager {
 
     public void clearAllEpics() {
         epics.clear();
+        subtasks.clear();
     }
 
     public void clearAllSubtasks() {
         subtasks.clear();
+        for (Epic epic : getAllEpics()) {
+            epic.getSubtasks().clear();
+            checkEpicStatus(epic.getId());
+        }
     }
 
     public Task getTask(Integer id) {
@@ -73,13 +77,24 @@ public class TaskManager {
 
     public void updateTask(Task updatedTask) {
         Integer id = updatedTask.getId();
-        if (updatedTask.getClass() == Task.class && tasks.containsKey(id)) {
-            tasks.put(id, updatedTask);
-        } else if (updatedTask.getClass() == Subtask.class && subtasks.containsKey(id)) {
-            subtasks.put(id, (Subtask) updatedTask);
-            checkEpicStatus(((Subtask) updatedTask).getEpic().getId());
-        } else if (updatedTask.getClass() == Epic.class && epics.containsKey(id)) {
-            epics.put(id, (Epic) updatedTask);
+        TaskType taskType = updatedTask.getType();
+        switch (taskType) {
+            case TASK:
+                if (tasks.containsKey(id)) {
+                    tasks.put(id, updatedTask);
+                }
+                break;
+            case EPIC:
+                if (epics.containsKey(id)) {
+                    epics.put(id, (Epic) updatedTask);
+                }
+                break;
+            case SUBTASK:
+                if (subtasks.containsKey(id)) {
+                    subtasks.put(id, (Subtask) updatedTask);
+                    checkEpicStatus(((Subtask) updatedTask).getEpic().getId());
+                }
+                break;
         }
     }
 
@@ -112,17 +127,17 @@ public class TaskManager {
         if (epic == null) return;
 
         int subtasksNewStatusCounter = 0;
-        int subtasksDoneStatusCouner = 0;
+        int subtasksDoneStatusCounter = 0;
         for (Subtask subtask : epic.getSubtasks()) {
             if (TaskStatus.NEW == subtask.getStatus()) {
                 subtasksNewStatusCounter++;
             } else if (TaskStatus.DONE == subtask.getStatus()) {
-                subtasksDoneStatusCouner++;
+                subtasksDoneStatusCounter++;
             } else break;
         }
         if (epic.getSubtasks().isEmpty() || subtasksNewStatusCounter == epic.getSubtasks().size()) {
             epic.setStatus(TaskStatus.NEW);
-        } else if (subtasksDoneStatusCouner == epic.getSubtasks().size()) {
+        } else if (subtasksDoneStatusCounter == epic.getSubtasks().size()) {
             epic.setStatus(TaskStatus.DONE);
         } else {
             epic.setStatus(TaskStatus.IN_PROGRESS);
