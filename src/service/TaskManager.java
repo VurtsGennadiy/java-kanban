@@ -1,6 +1,7 @@
 package service;
 
 import model.*;
+import java.util.List;
 import java.util.ArrayList;
 
 public interface TaskManager {
@@ -23,4 +24,6 @@ public interface TaskManager {
 
     void updateTask(Task updatedTask);
     void removeTask(Integer id);
+
+    List<Task> getHistory();
 }
