@@ -1,9 +1,9 @@
-import service.TaskManager;
+import service.InMemoryTaskManager;
 import model.*;
 import java.util.ArrayList;
 
 public class Test {
-    static TaskManager manager = new TaskManager();
+    static InMemoryTaskManager manager = new InMemoryTaskManager();
 
     public static void run() {
         createTasks();

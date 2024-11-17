@@ -1,9 +1,9 @@
-import service.TaskManager;
+import service.InMemoryTaskManager;
 
 public class Main {
 
     public static void main(String[] args) {
-        TaskManager taskManager = new TaskManager();
+        InMemoryTaskManager taskManager = new InMemoryTaskManager();
         Test.run();
     }
 }
