@@ -17,9 +17,9 @@ public class InMemoryHistoryManagerTest {
     @BeforeAll
     static void init() {
         historyManager = new InMemoryHistoryManager();
-        task = new Task("Task1_Name","Task1_Descr");
-        subtask = new Subtask("Subtask1_Name", "Subtask1_Of_Epic1");
-        epic = new Epic("Epic1_Name", "Epic_Of_One_Subtask", new ArrayList<>(List.of(subtask)));
+        task = new Task("Task1_Name","Task1_Description");
+        epic = new Epic("Epic1_Name", "Epic_Of_One_Subtask");
+        subtask = new Subtask("Subtask1_Name", "Subtask1_Of_Epic1", epic);
     }
 
     @BeforeEach
@@ -63,5 +63,23 @@ public class InMemoryHistoryManagerTest {
                         > InMemoryHistoryManager.HISTORY_LIST_SIZE,
                 "История наполнилась больше ограничения");
         assertEquals(expected, historyManager.getHistory(), "Старые записи не удаляются");
+    }
+
+    @Test
+    void shouldNoChangeTaskInHistory() {
+        TaskManager manager = new InMemoryTaskManager();
+        Task createdTask = manager.createNewTask(task);
+        Task saved = manager.getTask(createdTask.getId()); // get task, add in history
+        String name = saved.getName();
+        int id = createdTask.getId();
+
+        // update task in TaskManager
+        Task taskForUpdate = new Task("upd_task_name", "upd_task_description");
+        taskForUpdate.setId(id);
+        manager.updateTask(taskForUpdate);
+
+        Task actual = manager.getHistory().getFirst();
+        assertNotEquals(name, manager.getTask(id).getName(), "Не обновился task в TaskManager");
+        assertEquals(name, actual.getName(), "Задача в истории изменилась");
     }
 }
