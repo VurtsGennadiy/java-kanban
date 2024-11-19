@@ -35,9 +35,4 @@ public class EpicTest {
         epic.setId(1);
         assertEquals(epic, epic, "Эпик не равен сам себе");
     }
-
-    @Test
-    void noAddItself() {
-
-    }
 }

@@ -31,5 +31,4 @@ public class TaskTest {
         task1.setId(1);
         assertEquals(task1, task1, "Таска не равна сама себе");
     }
-
 }
