@@ -6,11 +6,11 @@ import java.util.HashMap;
 import java.util.List;
 
 public class InMemoryTaskManager implements TaskManager {
-    private static int idCounter;
     private final HashMap<Integer, Task> tasks;
     private final HashMap<Integer, Epic> epics;
     private final HashMap<Integer, Subtask> subtasks;
     private final HistoryManager historyManager;
+    private int idCounter;
 
     public InMemoryTaskManager() {
         tasks = new HashMap<>();
@@ -96,6 +96,11 @@ public class InMemoryTaskManager implements TaskManager {
         subtask.setId(idCounter);
         subtasks.put(idCounter, subtask);
         updateIdCounter();
+
+        Epic epic = subtask.getEpic();
+        if (epic != null) {
+            epic.addSubtask(subtask);
+        }
         return subtask;
     }
 
@@ -116,8 +121,14 @@ public class InMemoryTaskManager implements TaskManager {
                 break;
             case SUBTASK:
                 if (subtasks.containsKey(id)) {
-                    subtasks.put(id, (Subtask) updatedTask);
-                    checkEpicStatus(((Subtask) updatedTask).getEpic().getId());
+                    Subtask updTask = (Subtask) updatedTask;
+                    Subtask oldSubtask = subtasks.get(updTask.getId());
+                    subtasks.put(id, updTask);
+                    Epic epic = updTask.getEpic();
+                    if (epic != null) {
+                        epic.updateSubtask(oldSubtask, updTask);
+                        checkEpicStatus(epic.getId());
+                    }
                 }
                 break;
         }
@@ -141,15 +152,15 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public ArrayList<Subtask> getSubtasksOfEpic(Integer id) {
-        return epics.get(id).getSubtasks();
+    public ArrayList<Subtask> getSubtasksOfEpic(Integer epicId) {
+        return epics.get(epicId).getSubtasks();
     }
 
     private void updateIdCounter() {
         idCounter++;
     }
 
-    private void checkEpicStatus(Integer id) {
+    protected void checkEpicStatus(Integer id) {
         Epic epic = epics.get(id);
         if (epic == null) return;
 

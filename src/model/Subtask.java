@@ -7,12 +7,16 @@ public class Subtask extends Task {
 
     public Subtask(String name, String description) {
         super(name, description);
+        epic = new Epic();
+        epic.addSubtask(this);
     }
 
     public Subtask(String name, String description, Epic epic) {
         super(name, description);
         this.epic = epic;
-        epic.addSubtask(this);
+        if (epic != null) {
+            epic.addSubtask(this);
+        }
     }
 
     public Epic getEpic() {
@@ -21,6 +25,9 @@ public class Subtask extends Task {
 
     public void setEpic(Epic epic) {
         this.epic = epic;
+        if (epic != null && !epic.getSubtasks().contains(this)) {
+            epic.addSubtask(this);
+        }
     }
 
     @Override

@@ -18,13 +18,22 @@ public class Epic extends Task {
         super(name, description);
         this.subtasks = subtasks;
         for (Subtask subtask : subtasks) {
-            subtask.setEpic(this);
+            if (subtask.getEpic() != this) {
+                subtask.setEpic(this);
+            }
         }
     }
 
     public void addSubtask(Subtask subtask) {
-        subtasks.add(subtask);
+        if (!subtasks.contains(subtask)) {
+            subtasks.add(subtask);
+        }
         subtask.setEpic(this);
+    }
+
+    public void updateSubtask(Subtask oldSubtask, Subtask newSubtask) {
+        subtasks.remove(oldSubtask);
+        addSubtask(newSubtask);
     }
 
     public ArrayList<Subtask> getSubtasks() {

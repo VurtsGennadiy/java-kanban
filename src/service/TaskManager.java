@@ -16,7 +16,7 @@ public interface TaskManager {
     Task getTask(Integer id);
     Epic getEpic(Integer id);
     Subtask getSubtask(Integer id);
-    ArrayList<Subtask> getSubtasksOfEpic(Integer id);
+    ArrayList<Subtask> getSubtasksOfEpic(Integer epicId);
 
     Task createNewTask(Task task);
     Epic createNewEpic(Epic epic);
