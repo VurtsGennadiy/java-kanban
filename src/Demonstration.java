@@ -1,56 +1,78 @@
 import model.*;
+import service.Managers;
 import service.TaskManager;
 import java.util.ArrayList;
 
 public class Demonstration {
     TaskManager manager;
 
-    Demonstration(TaskManager manager) {
-        this.manager = manager;
+    Demonstration() {
+        manager = Managers.getDefault();
     }
 
     public void run() {
         System.out.println("***** Создаём задачи всех типов *****");
         createTasks();
         printAllTasks();
+        printHistory();
         System.out.println();
 
-        System.out.println("***** Просматриваем все задачи, добавляем в историю *****");
-        addInHistory();
-        printAllTasks();
+        System.out.println("***** Последовательно просматриваем все задачи, добавляем в историю *****");
+        directOrderAddInHistory();
+        printHistory();
         System.out.println();
 
-        System.out.println("***** Меняем статусы *****");
-        changeStatuses();
-        printAllTasks();
+        System.out.println("***** Просматриваем все задачи в обратном порядке, добавляем в историю *****");
+        reverseOrderAddInHistory();
+        printHistory();
         System.out.println();
 
-        System.out.println("***** Удаляем несколько задач *****");
-        removeTasks();
+        System.out.println("***** Рандомно запрашиваем несколько задач, добавляем в историю *****");
+        randomAddInHistory();
+        printHistory();
+        System.out.println();
+
+        System.out.println("***** Удаляем задачу id=0, проверяем историю *****");
+        manager.removeTask(0);
         printAllTasks();
+        printHistory();
+        System.out.println();
+
+        System.out.println("***** Удаляем подзадачу из эпика id=4, проверяем историю *****");
+        manager.removeTask(4);
+        printAllTasks();
+        printHistory();
+        System.out.println();
+
+        System.out.println("***** Удаляем эпик из 3-х подзадач id=5, проверяем историю *****");
+        manager.removeTask(5);
+        printAllTasks();
+        printHistory();
+        System.out.println();
     }
 
     void createTasks() {
         Task task1 = new Task("Task1_Name","Task1_Description");
-        Task task2 = new Task("Task2_Name","Task1_Description");
+        Task task2 = new Task("Task2_Name","Task2_Description");
 
         Subtask subtask1 = new Subtask("Subtask1_Name", "Subtask1_OfEpic1");
         Subtask subtask2 = new Subtask("Subtask2_Name", "Subtask2_OfEpic1");
+        Subtask subtask3 = new Subtask("Subtask3_Name", "Subtask3_OfEpic1");
         ArrayList<Subtask> subtasksOfEpic1 = new ArrayList<>();
         subtasksOfEpic1.add(subtask1);
         subtasksOfEpic1.add(subtask2);
+        subtasksOfEpic1.add(subtask3);
 
-        Epic epic1 = new Epic("Epic1_Name", "Epic_Of_Two_Subtasks", subtasksOfEpic1);
-        Epic epic2 = new Epic("Epic2_Name", "Epic_Of_One_Subtasks");
-        Subtask subtask3 = new Subtask("Subtask3_Name", "Subtask3_OfEpic2_3ParamsConstructor", epic2);
+        Epic epicWith3subs = new Epic("epicWith3subs", "Epic_Of_Three_Subtasks", subtasksOfEpic1);
+        Epic emptyEpic = new Epic("emptyEpic", "Empty_Subtasks_List");
 
         manager.createNewTask(task1);
         manager.createNewTask(task2);
         manager.createNewSubtask(subtask1);
         manager.createNewSubtask(subtask2);
         manager.createNewSubtask(subtask3);
-        manager.createNewEpic(epic1);
-        manager.createNewEpic(epic2);
+        manager.createNewEpic(epicWith3subs);
+        manager.createNewEpic(emptyEpic);
     }
 
     void printAllTasks() {
@@ -70,7 +92,9 @@ public class Demonstration {
         for (Task subtask : manager.getAllSubtasks()) {
             System.out.println(subtask);
         }
+    }
 
+    void printHistory() {
         System.out.println("История:");
         for (Task task : manager.getHistory()) {
             System.out.println(task);
@@ -103,7 +127,7 @@ public class Demonstration {
         manager.removeTask(manager.getAllEpics().getLast().getId());
     }
 
-    void addInHistory() {
+    void directOrderAddInHistory() {
         manager.getTask(0);
         manager.getTask(1);
         manager.getSubtask(2);
@@ -111,5 +135,22 @@ public class Demonstration {
         manager.getSubtask(4);
         manager.getEpic(5);
         manager.getEpic(6);
+    }
+
+    void reverseOrderAddInHistory() {
+        manager.getEpic(6);
+        manager.getEpic(5);
+        manager.getSubtask(4);
+        manager.getSubtask(3);
+        manager.getSubtask(2);
+        manager.getTask(1);
+        manager.getTask(0);
+    }
+
+    void randomAddInHistory() {
+        manager.getSubtask(3);
+        manager.getSubtask(3);
+        manager.getEpic(6);
+        manager.getTask(0);
     }
 }
