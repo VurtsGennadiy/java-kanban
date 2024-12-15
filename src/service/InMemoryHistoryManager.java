@@ -57,8 +57,7 @@ public class InMemoryHistoryManager implements HistoryManager {
     public Task getFirst() {
         if (head == null) {
             return null;
-        }
-        else {
+        } else {
             return head.data;
         }
     }
@@ -66,8 +65,7 @@ public class InMemoryHistoryManager implements HistoryManager {
     public Task getLast() {
         if (tail == null) {
             return null;
-        }
-        else {
+        } else {
             return tail.data;
         }
     }
