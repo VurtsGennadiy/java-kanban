@@ -1,32 +1,28 @@
 package service;
 
 import model.*;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.BeforeAll;
-import static org.junit.jupiter.api.Assertions.*;
 import java.util.List;
+import java.util.Collections;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
+import static org.junit.jupiter.api.Assertions.*;
 
 class InMemoryTaskManagerTest {
+    static InMemoryTaskManager manager;
     static Task task;
     static Subtask subtask;
     static Epic epic;
 
-    @BeforeAll
-    static void init() {
+    @BeforeEach
+    void init() {
+        manager = new InMemoryTaskManager();
         task = new Task("Task1_Name","Task1_Description");
         epic = new Epic("Epic1_Name", "Epic_Of_One_Subtask");
         subtask = new Subtask("Subtask1_Name", "Subtask1_Of_Epic1", epic);
     }
 
-    @AfterEach
-    void resetTasks() {
-        init();
-    }
-
     @Test
-    void canAddAllTaskTypesAndFindById() {
-        InMemoryTaskManager manager = new InMemoryTaskManager();
+    void addAllTaskTypesAndFindById() {
         manager.createNewTask(task);
         manager.createNewSubtask(subtask);
         manager.createNewEpic(epic);
@@ -46,27 +42,36 @@ class InMemoryTaskManagerTest {
     }
 
     @Test
-    void canClearAllTaskTypes() {
-        InMemoryTaskManager manager = new InMemoryTaskManager();
+    void clearAllTasks() {
         manager.createNewTask(task);
-        manager.createNewSubtask(subtask);
-        manager.createNewEpic(epic);
-
         manager.clearAllTasks();
-        manager.clearAllSubtasks();
-        assertTrue(manager.getAllTasks().isEmpty(), "Не очистился список Task");
-        assertTrue(manager.getAllSubtasks().isEmpty(), "Не очистился список Subtask");
-        assertFalse(manager.getAllEpics().isEmpty(), "Epic не должен удалиться вместе с Subtask");
-
-        manager.createNewSubtask(subtask);
-        manager.clearAllEpics();
-        assertTrue(manager.getAllEpics().isEmpty(), "Не очистился список Epic");
-        assertTrue(manager.getAllSubtasks().isEmpty(), "Subtask не существует отдельно от эпика");
+        assertTrue(manager.getAllTasks().isEmpty(), "Не очистился список tasks в менеджере");
     }
 
     @Test
-    void canReturnSubtasksOfEpic() {
-        InMemoryTaskManager manager = new InMemoryTaskManager();
+    void clearAllSubtasks() {
+        manager.createNewSubtask(subtask);
+        manager.createNewEpic(epic);
+        manager.clearAllSubtasks();
+
+        assertTrue(manager.getAllSubtasks().isEmpty(), "Не очистился список subtasks в менеджере");
+        assertFalse(manager.getAllEpics().isEmpty(), "Epic не должен удалиться вместе с subtask");
+        assertTrue(epic.getSubtasks().isEmpty(), "Не очистился список subtasks в epic");
+    }
+
+    @Test
+    void clearAllEpics() {
+        manager.createNewSubtask(subtask);
+        manager.createNewEpic(epic);
+        manager.clearAllEpics();
+
+        assertTrue(manager.getAllEpics().isEmpty(), "Не очистился список epics в менеджере");
+        assertTrue(manager.getAllSubtasks().isEmpty(),
+                "Не очистился список subtasks в менеджере, subtask не должен существовать отдельно от epic");
+    }
+
+    @Test
+    void getSubtasksOfEpic() {
         Subtask subtask = manager.createNewSubtask(InMemoryTaskManagerTest.subtask);
         Epic epic = manager.createNewEpic(InMemoryTaskManagerTest.epic);
         List<Subtask> subtasks = manager.getSubtasksOfEpic(epic.getId());
@@ -74,56 +79,69 @@ class InMemoryTaskManagerTest {
     }
 
     @Test
-    void canRemoveTaskById() {
-        InMemoryTaskManager manager = new InMemoryTaskManager();
-        Task task = manager.createNewTask(InMemoryTaskManagerTest.task);
-        Subtask subtask = manager.createNewSubtask(InMemoryTaskManagerTest.subtask);
-        Epic epic = manager.createNewEpic(InMemoryTaskManagerTest.epic);
+    void removeTaskById() {
+        manager.createNewTask(task);
+        int taskId = task.getId();
 
-        manager.removeTask(5);
-        assertEquals(1, manager.getAllTasks().size(), "Не должно ничего удалиться");
-        assertEquals(1, manager.getAllSubtasks().size(), "Не должно ничего удалиться");
-        assertEquals(1, manager.getAllEpics().size(), "Не должно ничего удалиться");
+        manager.getTask(taskId);
+        manager.removeTask(taskId);
 
-        manager.removeTask(task.getId());
-        manager.removeTask(subtask.getId());
-        assertNull(manager.getTask(task.getId()), "Не удалился Task");
-        assertNull(manager.getSubtask(subtask.getId()), "Не удалился Subtask");
-
-        manager.createNewSubtask(subtask);
-        manager.removeTask(epic.getId());
-
-        assertNull(manager.getEpic(epic.getId()), "Не удалился Epic");
-        assertNull(manager.getSubtask(subtask.getId()), "Subtask не существует отдельно от эпика");
+        assertNull(manager.getTask(taskId), "task не удалился из taskManager");
+        assertEquals(Collections.emptyList(), manager.getHistory(), "task не удалился из historyManager");
     }
 
     @Test
-    void canUpdateTask() {
-        InMemoryTaskManager manager = new InMemoryTaskManager();
+    void removeSubtaskById() {
+        manager.createNewSubtask(subtask);
+        manager.createNewEpic(epic);
+        int subtaskId = subtask.getId();
+
+        manager.getSubtask(subtaskId);
+        manager.removeTask(subtaskId);
+
+        assertNull(manager.getSubtask(subtaskId), "subtask не удалился из taskManager");
+        assertTrue(epic.getSubtasks().isEmpty(), "subtask не удалился из epic");
+        assertEquals(Collections.emptyList(), manager.getHistory(), "subtask не удалился из historyManager");
+    }
+
+    @Test
+    void removeEpicById() {
+        manager.createNewEpic(epic);
+        manager.createNewSubtask(subtask);
+
+        manager.getSubtask(subtask.getId());
+        manager.getEpic(epic.getId());
+        manager.removeTask(epic.getId());
+
+        assertNull(manager.getEpic(epic.getId()), "Не удалился epic");
+        assertNull(manager.getSubtask(subtask.getId()), "Не удалился subtask связанный с epic");
+        assertEquals(Collections.emptyList(), manager.getHistory(), "Не очистилась история");
+    }
+
+    @Test
+    void updateTask() {
         Task task = manager.createNewTask(InMemoryTaskManagerTest.task);
         Task updTask = new Task();
         updTask.setId(task.getId());
         manager.updateTask(updTask);
 
-        assertEquals(1, manager.getAllTasks().size(), "Не должен добавиться Task");
-        assertNotSame(task, manager.getTask(task.getId()), "Task не обновился");
+        assertEquals(1, manager.getAllTasks().size(), "Должен остаться 1 task");
+        assertNotSame(task, manager.getTask(task.getId()), "Task не заменился в менеджере");
     }
 
     @Test
-    void canUpdateEpic() {
-        InMemoryTaskManager manager = new InMemoryTaskManager();
+    void updateEpic() {
         Epic epic = manager.createNewEpic(InMemoryTaskManagerTest.epic);
         Epic updEpic = new Epic();
         updEpic.setId(epic.getId());
         manager.updateTask(updEpic);
 
-        assertEquals(1, manager.getAllEpics().size(), "Не должен добавиться Epic");
-        assertNotSame(epic, manager.getEpic(epic.getId()), "Epic не обновился");
+        assertEquals(1, manager.getAllEpics().size(), "Должен остаться 1 epic");
+        assertNotSame(epic, manager.getEpic(epic.getId()), "Epic не заменился в менеджере");
     }
 
     @Test
-    void canUpdateSubtask() {
-        InMemoryTaskManager manager = new InMemoryTaskManager();
+    void updateSubtask() {
         Epic epic = manager.createNewEpic(InMemoryTaskManagerTest.epic);
         Subtask subtask = manager.createNewSubtask(InMemoryTaskManagerTest.subtask);
 
@@ -143,7 +161,6 @@ class InMemoryTaskManagerTest {
 
     @Test
     void shouldNoChangeTaskFieldsAfterAdd() {
-        InMemoryTaskManager manager = new InMemoryTaskManager();
         Task addedTask = new Task(task.getName(), task.getDescription());
         addedTask.setStatus(task.getStatus());
         addedTask = manager.createNewTask(addedTask);
@@ -155,7 +172,6 @@ class InMemoryTaskManagerTest {
 
     @Test
     void shouldNoChangeSubtaskFieldsAfterAdd() {
-        InMemoryTaskManager manager = new InMemoryTaskManager();
         Subtask addedSubtask = new Subtask(subtask.getName(), subtask.getDescription(), subtask.getEpic());
         addedSubtask.setStatus(subtask.getStatus());
         addedSubtask = manager.createNewSubtask(addedSubtask);
@@ -168,7 +184,6 @@ class InMemoryTaskManagerTest {
 
     @Test
     void shouldNoChangeEpicFieldsAfterAdd() {
-        InMemoryTaskManager manager = new InMemoryTaskManager();
         Epic addedEpic = new Epic(epic.getName(), epic.getDescription(), epic.getSubtasks());
         addedEpic.setStatus(epic.getStatus());
         addedEpic = manager.createNewEpic(addedEpic);
@@ -181,7 +196,6 @@ class InMemoryTaskManagerTest {
 
     @Test
     void shouldAddTaskWithSettingIdWhenContainSameId() {
-        InMemoryTaskManager manager = new InMemoryTaskManager();
         Task taskWithGenerateId = manager.createNewTask(task);
         int id = taskWithGenerateId.getId();
         Task taskWithSetId = new Task(task.getName(), task.getDescription());
@@ -194,7 +208,6 @@ class InMemoryTaskManagerTest {
 
     @Test
     void shouldSetEpicStatusBasedOnSubtasksStatus() {
-        InMemoryTaskManager manager = new InMemoryTaskManager();
         manager.createNewEpic(epic);
         Subtask subtask2 = new Subtask("subtask2_name", "subtask2_description", epic);
         manager.createNewSubtask(subtask);
