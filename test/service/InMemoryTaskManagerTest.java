@@ -44,30 +44,44 @@ class InMemoryTaskManagerTest {
     @Test
     void clearAllTasks() {
         manager.createNewTask(task);
+        manager.getTask(task.getId());
         manager.clearAllTasks();
+
         assertTrue(manager.getAllTasks().isEmpty(), "Не очистился список tasks в менеджере");
+        assertFalse(manager.getHistory().contains(task), "Task не удалился из истории");
     }
 
     @Test
     void clearAllSubtasks() {
         manager.createNewSubtask(subtask);
         manager.createNewEpic(epic);
+        manager.getSubtask(subtask.getId());
+        manager.getEpic(epic.getId());
         manager.clearAllSubtasks();
 
         assertTrue(manager.getAllSubtasks().isEmpty(), "Не очистился список subtasks в менеджере");
-        assertFalse(manager.getAllEpics().isEmpty(), "Epic не должен удалиться вместе с subtask");
+        assertFalse(manager.getAllEpics().isEmpty(),
+                "Epic, связанный с subtask не должен удалиться из менеджера");
         assertTrue(epic.getSubtasks().isEmpty(), "Не очистился список subtasks в epic");
+        assertFalse(manager.getHistory().contains(subtask), "Subtask не удалился из истории");
+        assertTrue(manager.getHistory().contains(epic),
+                "Epic, связанный с subtask не должен удалиться истории");
     }
 
     @Test
     void clearAllEpics() {
         manager.createNewSubtask(subtask);
         manager.createNewEpic(epic);
+        manager.getSubtask(subtask.getId());
+        manager.getEpic(epic.getId());
         manager.clearAllEpics();
 
         assertTrue(manager.getAllEpics().isEmpty(), "Не очистился список epics в менеджере");
         assertTrue(manager.getAllSubtasks().isEmpty(),
                 "Не очистился список subtasks в менеджере, subtask не должен существовать отдельно от epic");
+        assertFalse(manager.getHistory().contains(epic), "Epic не удалился из истории");
+        assertFalse(manager.getHistory().contains(subtask),
+                "Subtask, принадлежащий epic не удалился из истории");
     }
 
     @Test
