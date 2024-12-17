@@ -7,15 +7,16 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.List;
 import java.util.ArrayList;
 
-public class InMemoryHistoryManagerTest {
-    static InMemoryHistoryManager historyManager;
+public class HistoryManagerTest {
+    static HistoryManager historyManager;
+    static List<Task> history;
     static Task task;
     static Subtask subtask;
     static Epic epic;
 
     @BeforeEach
     void init() {
-        historyManager = new InMemoryHistoryManager();
+        historyManager = Managers.getDefaultHistory();
         task = new Task("Task1_Name","Task1_Description");
         epic = new Epic("Epic1_Name", "Epic_Of_One_Subtask");
         subtask = new Subtask("Subtask1_Name", "Subtask1_Of_Epic1", epic);
@@ -43,7 +44,7 @@ public class InMemoryHistoryManagerTest {
 
     @Test
     void shouldNoChangeTaskInHistory() {
-        TaskManager manager = new InMemoryTaskManager();
+        TaskManager manager = Managers.getDefault();
         Task createdTask = manager.createNewTask(task);
         Task saved = manager.getTask(createdTask.getId()); // get task, add in history
         String name = saved.getName();
@@ -61,10 +62,8 @@ public class InMemoryHistoryManagerTest {
 
     @Test
     void shouldNoAddNull() {
-        TaskManager manager = new InMemoryTaskManager();
-        Task task = manager.getTask(1);
-        assertNull(task, "TaskManager не вернул null для добавления в историю");
-        assertEquals(0, manager.getHistory().size(), "Null добавился в историю");
+        historyManager.addTask(null);
+        assertTrue(historyManager.getHistory().isEmpty(), "Null добавился в историю");
     }
 
     @Test
@@ -81,20 +80,20 @@ public class InMemoryHistoryManagerTest {
         historyManager.addTask(task);
         historyManager.addTask(subtask);
         historyManager.addTask(task);
+        history = historyManager.getHistory();
 
-        assertEquals(2, historyManager.getSize(),
+        assertEquals(2, history.size(),
                 "Две задачи с равными id не должны добавиться в историю");
-        assertSame(task, historyManager.getLast(), "Должен остаться последний просмотр");
+        assertSame(task, history.getLast(), "Должен остаться последний просмотр");
     }
 
     @Test
     void removeTaskWhenOneInHistory() {
         historyManager.addTask(task);
         historyManager.remove(task.getId());
+        List<Task> history = historyManager.getHistory();
 
-        assertEquals(0, historyManager.getSize(), "Единственная задача не удалилась из истории");
-        assertNull(historyManager.getFirst(), "head не очистился");
-        assertNull(historyManager.getLast(), "tail не очистился");
+        assertTrue(history.isEmpty(), "Единственная задача не удалилась из истории");
     }
 
     @Test
@@ -109,9 +108,10 @@ public class InMemoryHistoryManagerTest {
         historyManager.addTask(task2);
         historyManager.addTask(task3);
         historyManager.remove(1);
+        List<Task> history = historyManager.getHistory();
 
-        assertEquals(2, historyManager.getSize(), "Задача не удалилась из head");
-        assertEquals(task2, historyManager.getFirst(), "Не обновился head");
+        assertEquals(2, history.size(), "Размер истории должен уменьшиться");
+        assertFalse(history.contains(task1), "Задача не удалилась из истории");
     }
 
     @Test
@@ -126,8 +126,9 @@ public class InMemoryHistoryManagerTest {
         historyManager.addTask(task2);
         historyManager.addTask(task3);
         historyManager.remove(2);
+        List<Task> history = historyManager.getHistory();
 
-        assertEquals(2, historyManager.getSize(), "Задача не удалилась из середины истории");
+        assertEquals(2, history.size(), "Задача не удалилась из середины истории");
     }
 
     @Test
@@ -142,8 +143,9 @@ public class InMemoryHistoryManagerTest {
         historyManager.addTask(task2);
         historyManager.addTask(task3);
         historyManager.remove(3);
+        List<Task> history = historyManager.getHistory();
 
-        assertEquals(2, historyManager.getSize(), "Задача не удалилась из tail");
-        assertEquals(task2, historyManager.getLast(), "Не обновился tail");
+        assertEquals(2, history.size(), "Размер истории должен уменьшиться");
+        assertFalse(history.contains(task3), "Задача не удалилась из истории");
     }
 }

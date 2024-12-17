@@ -50,26 +50,6 @@ public class InMemoryHistoryManager implements HistoryManager {
         nodes.put(tail.data.getId(), tail);
     }
 
-    public int getSize() {
-        return nodes.size();
-    }
-
-    public Task getFirst() {
-        if (head == null) {
-            return null;
-        } else {
-            return head.data;
-        }
-    }
-
-    public Task getLast() {
-        if (tail == null) {
-            return null;
-        } else {
-            return tail.data;
-        }
-    }
-
     private List<Task> getTasks() {
         List<Task> tasks = new ArrayList<>();
         Node curNode = head;
