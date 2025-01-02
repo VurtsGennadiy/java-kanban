@@ -23,7 +23,7 @@ public class FileBackedTaskManagerTest {
     @BeforeEach
     void init() {
         path = Paths.get("fileBackedTaskManagerTest.csv");
-        manager = new FileBackedTaskManager(path);
+        manager = FileBackedTaskManager.loadFromFile(path);
         task = new Task("Task1_Name","Task1_Description");
         epic = new Epic("Epic1_Name", "Epic_Of_One_Subtask");
         subtask = new Subtask("Subtask1_Name", "Subtask1_Of_Epic1", epic);
@@ -39,6 +39,19 @@ public class FileBackedTaskManagerTest {
         assertEquals(expectedStringFromSubtask, manager.toString(subtask));
         assertEquals(expectedStringFromEpic, manager.toString(epic));
     }
+
+    @Test
+    void taskFromString() {
+        String taskStr = "0,TASK,Task1_Name,NEW,Task1_Description";
+        Task task = manager.fromString(taskStr);
+
+        assertEquals(0, task.getId());
+        assertEquals(TaskType.TASK, task.getType());
+        assertEquals("Task1_Name", task.getName());
+        assertEquals("Task1_Description", task.getDescription());
+        assertEquals(TaskStatus.NEW, task.getStatus());
+    }
+
 
     @AfterEach
     void tearDown() {
