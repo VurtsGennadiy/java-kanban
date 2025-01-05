@@ -223,20 +223,21 @@ class InMemoryTaskManagerTest {
     @Test
     void shouldSetEpicStatusBasedOnSubtasksStatus() {
         manager.createNewEpic(epic);
+        epic.setStatus(TaskStatus.DONE);
         Subtask subtask2 = new Subtask("subtask2_name", "subtask2_description", epic);
         manager.createNewSubtask(subtask);
         manager.createNewSubtask(subtask2);
 
-        manager.checkEpicStatus(epic.getId());
         assertEquals(TaskStatus.NEW, epic.getStatus(), "Статус должен быть NEW");
 
         subtask2.setStatus(TaskStatus.IN_PROGRESS);
-        manager.checkEpicStatus(epic.getId());
+        manager.updateTask(subtask2);
         assertEquals(TaskStatus.IN_PROGRESS, epic.getStatus(), "Статус должен быть IN_PROGRESS");
 
         subtask.setStatus(TaskStatus.DONE);
         subtask2.setStatus(TaskStatus.DONE);
-        manager.checkEpicStatus(epic.getId());
+        manager.updateTask(subtask);
+        manager.updateTask(subtask2);
         assertEquals(TaskStatus.DONE, epic.getStatus(), "Статус должен быть DONE");
     }
 }

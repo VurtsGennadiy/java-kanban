@@ -1,13 +1,17 @@
 import model.*;
 import service.Managers;
 import service.TaskManager;
+
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
+import java.nio.file.Path;
 
 public class Demonstration {
     TaskManager manager;
 
     Demonstration() {
-        manager = Managers.getDefault();
+        manager = Managers.getFileBackedTaskManager(Path.of("Demonstration.csv"));
     }
 
     public void run() {
@@ -49,6 +53,12 @@ public class Demonstration {
         printAllTasks();
         printHistory();
         System.out.println();
+
+        try {
+            Files.delete(Path.of("Demonstration.csv"));
+        } catch (IOException e) {
+            e.printStackTrace();;
+        }
     }
 
     void createTasks() {

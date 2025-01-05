@@ -112,6 +112,7 @@ public class InMemoryTaskManager implements TaskManager {
         Epic epic = subtask.getEpic();
         if (epic != null) {
             epic.addSubtask(subtask);
+            checkEpicStatus(epic.getId());
         }
         return subtask;
     }
@@ -175,7 +176,7 @@ public class InMemoryTaskManager implements TaskManager {
         idCounter++;
     }
 
-    protected void checkEpicStatus(Integer id) {
+    private void checkEpicStatus(Integer id) {
         Epic epic = epics.get(id);
         if (epic == null) return;
 
