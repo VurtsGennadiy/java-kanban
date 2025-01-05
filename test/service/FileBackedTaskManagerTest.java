@@ -13,20 +13,188 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class FileBackedTaskManagerTest {
-    FileBackedTaskManager manager;
-    Task task;
-    Subtask subtask;
-    Epic epic;
+public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskManager> {
     Path path;
 
     @BeforeEach
+    @Override
     void init() {
+        super.init();
         path = Paths.get("fileBackedTaskManagerTest.csv");
         manager = FileBackedTaskManager.loadFromFile(path);
-        task = new Task("Task1_Name","Task1_Description");
-        epic = new Epic("Epic1_Name", "Epic_Of_One_Subtask");
-        subtask = new Subtask("Subtask1_Name", "Subtask1_Of_Epic1", epic);
+    }
+
+    @Test
+    @Override
+    void createNewTaskAndFindById() {
+        super.createNewTaskAndFindById();
+        try (BufferedReader reader = new BufferedReader(new FileReader(path.toString()))) {
+            reader.readLine(); // skip title
+            Task recordTask = manager.fromString(reader.readLine());
+
+            assertFalse(reader.ready(), "В файл записаны лишние строки");
+            assertEquals(task, recordTask, "Task некорректно сохранился в файл");
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    @Test
+    @Override
+    void createNewSubtaskAndFindById() {
+        super.createNewSubtaskAndFindById();
+        try (BufferedReader reader = new BufferedReader(new FileReader(path.toString()))) {
+            reader.readLine(); // skip title
+            Subtask recordSubtask = (Subtask) manager.fromString(reader.readLine());
+
+            assertFalse(reader.ready(), "В файл записаны лишние строки");
+            assertEquals(subtask, recordSubtask, "Subtask некорректно сохранился в файл");
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    @Test
+    @Override
+    void createNewEpicAndFindById() {
+        super.createNewEpicAndFindById();
+        try (BufferedReader reader = new BufferedReader(new FileReader(path.toString()))) {
+            reader.readLine(); // skip title
+            Epic recordEpic = (Epic) manager.fromString(reader.readLine());
+
+            assertFalse(reader.ready(), "В файл записаны лишние строки");
+            assertEquals(epic, recordEpic, "Epic некорректно сохранился в файл");
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    @Test
+    @Override
+    void updateTask() {
+        super.updateTask();
+        try (BufferedReader reader = new BufferedReader(new FileReader(path.toString()))) {
+            reader.readLine(); // skip title
+            Task recordTask = manager.fromString(reader.readLine());
+
+            assertFalse(reader.ready(), "В файл записаны лишние строки");
+            assertEquals(task.getId(), recordTask.getId(), "id задачи не должен измениться");
+            assertNotEquals(task.getDescription(), recordTask.getDescription(),
+                    "обновленный description не записался в файл");
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    @Test
+    @Override
+    void updateEpic() {
+        super.updateEpic();
+        try (BufferedReader reader = new BufferedReader(new FileReader(path.toString()))) {
+            reader.readLine(); // skip title
+            Epic recordEpic = (Epic) manager.fromString(reader.readLine());
+
+            assertFalse(reader.ready(), "В файл записаны лишние строки");
+            assertEquals(task.getId(), recordEpic.getId(), "id задачи не должен измениться");
+            assertNotEquals(task.getDescription(), recordEpic.getDescription(),
+                    "обновленный description не записался в файл");
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    @Test
+    @Override
+    void updateSubtask() {
+        super.updateSubtask();
+        try (BufferedReader reader = new BufferedReader(new FileReader(path.toString()))) {
+            reader.readLine(); // skip title
+            Epic recordEpic  = (Epic) manager.fromString(reader.readLine());
+            Subtask recordSubtask = (Subtask) manager.fromString(reader.readLine());
+
+            assertFalse(reader.ready(), "В файл записаны лишние строки");
+            assertEquals(subtask.getId(), recordSubtask.getId(), "Subtask Id не должен измениться");
+            assertEquals(epic.getId(), recordEpic.getId(), "Epic Id не должен измениться");
+            assertEquals(TaskStatus.IN_PROGRESS, epic.getStatus(), "Не записался новый статус");
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    @Test
+    @Override
+    void removeTaskById() {
+        super.removeTaskById();
+        try (BufferedReader reader = new BufferedReader(new FileReader(path.toString()))) {
+            reader.readLine(); // skip title
+            assertFalse(reader.ready(), "Task не удалился из файла");
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    @Test
+    @Override
+    void removeEpicById() {
+        super.removeEpicById();
+        try (BufferedReader reader = new BufferedReader(new FileReader(path.toString()))) {
+            reader.readLine(); // skip title
+            assertFalse(reader.ready(), "Epic и его subtask не удалились из файла");
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    @Test
+    @Override
+    void removeSubtaskById() {
+        super.removeSubtaskById();
+        try (BufferedReader reader = new BufferedReader(new FileReader(path.toString()))) {
+            reader.readLine(); // skip title
+            Epic recordEpic = (Epic) manager.fromString(reader.readLine());
+            assertEquals(epic, recordEpic, "Epic должен остаться в файле");
+            assertFalse(reader.ready(), "В файле должен остались лишние строки epic");
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    @Test
+    @Override
+    void clearAllTasks() {
+        super.clearAllTasks();
+        try (BufferedReader reader = new BufferedReader(new FileReader(path.toString()))) {
+            reader.readLine(); // skip title
+            assertFalse(reader.ready(), "Task не удалился из файла");
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    @Test
+    @Override
+    void clearAllEpics() {
+        super.clearAllEpics();
+        try (BufferedReader reader = new BufferedReader(new FileReader(path.toString()))) {
+            reader.readLine(); // skip title
+            assertFalse(reader.ready(), "Epic и его subtask не удалились из файла");
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    @Test
+    @Override
+    void clearAllSubtasks() {
+        super.clearAllSubtasks();
+        try (BufferedReader reader = new BufferedReader(new FileReader(path.toString()))) {
+            reader.readLine(); // skip title
+            Epic recordEpic = (Epic) manager.fromString(reader.readLine());
+            assertEquals(epic, recordEpic, "Epic должен остаться в файле");
+            assertFalse(reader.ready(), "В файле должен остались лишние строки epic");
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
     }
 
     @Test

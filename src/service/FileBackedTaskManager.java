@@ -170,7 +170,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     }
 
     public static void main(String[] args) {
-        Path path = Paths.get("manager.csv");
+        Path path = Paths.get("res","manager.csv");
         try {
             Files.deleteIfExists(path);
         } catch (IOException ex) {
