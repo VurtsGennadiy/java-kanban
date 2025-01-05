@@ -14,7 +14,7 @@ import model.*;
 public class FileBackedTaskManager extends InMemoryTaskManager {
     private final Path path;
 
-    private FileBackedTaskManager(Path path) throws IOException{
+    private FileBackedTaskManager(Path path) throws IOException {
         this.path = path;
         if (Files.notExists(path)) {
             Files.createFile(path);
@@ -95,7 +95,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         } catch (IOException ex) {
             throw new ManagerLoadFileException("Ошибка создания файла " + path.getFileName(), ex);
         }
-        try  (BufferedReader reader = new BufferedReader(new FileReader(path.toString(), StandardCharsets.UTF_8))){
+        try  (BufferedReader reader = new BufferedReader(new FileReader(path.toString(), StandardCharsets.UTF_8))) {
             reader.readLine(); // skip title string
             int taskIdMaxValue = -1;
             while (reader.ready()) {
