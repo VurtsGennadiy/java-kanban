@@ -1,12 +1,16 @@
 package model;
 
 import java.util.Objects;
+import java.time.LocalDateTime;
+import java.time.Duration;
 
 public class Task {
     protected int id;
     protected TaskStatus status;
     protected String name;
     protected String description;
+    protected LocalDateTime startTime;
+    protected Duration duration;
 
     public Task() {
         status = TaskStatus.NEW;
@@ -16,6 +20,30 @@ public class Task {
         this.name = name;
         this.description = description;
         status = TaskStatus.NEW;
+    }
+
+    public Task(String name, String description, LocalDateTime startTime, Duration duration) {
+        this(name, description);
+        this.startTime = startTime;
+        if (durationValidate(duration)) {
+            this.duration = duration;
+        }
+    }
+
+    public LocalDateTime getStartTime() {
+        return startTime;
+    }
+
+    public Duration getDuration() {
+        return duration;
+    }
+
+    public LocalDateTime getEndTime() {
+        LocalDateTime endTime = null;
+        if (startTime != null && duration != null) {
+            endTime = startTime.plus(duration);
+        }
+        return endTime;
     }
 
     public int getId() {
@@ -79,5 +107,13 @@ public class Task {
             result += ", description=null";
         }
         return result + "}";
+    }
+
+    private boolean durationValidate(Duration duration) {
+        if (duration.getSeconds() <= 0) {
+            throw new IllegalArgumentException("Длительность задачи должна быть положительная: "
+                    + duration.getSeconds());
+        }
+        return true;
     }
 }

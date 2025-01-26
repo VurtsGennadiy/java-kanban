@@ -1,5 +1,8 @@
 package model;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+
 public class Subtask extends Task {
     private Epic epic;
 
@@ -14,10 +17,18 @@ public class Subtask extends Task {
 
     public Subtask(String name, String description, Epic epic) {
         super(name, description);
-        this.epic = epic;
-        if (epic != null) {
-            epic.addSubtask(this);
-        }
+        setEpic(epic);
+    }
+
+    public Subtask(String name, String description, LocalDateTime startTime, Duration duration) {
+        super(name, description, startTime, duration);
+        epic = new Epic();
+        epic.addSubtask(this);
+    }
+
+    public Subtask(String name, String description, LocalDateTime startTime, Duration duration, Epic epic) {
+        super(name, description, startTime, duration);
+        setEpic(epic);
     }
 
     public Epic getEpic() {
