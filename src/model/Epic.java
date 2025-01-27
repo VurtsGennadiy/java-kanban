@@ -91,16 +91,16 @@ public class Epic extends Task {
     }
 
     private void removeTime(Subtask oldSubtask) {
-        if (duration != null) {
+        if (duration != null && oldSubtask.getDuration() != null) {
             duration = duration.minus(oldSubtask.getDuration());
             if (duration.isZero()) {
                 duration = null;
             }
         }
-        if (startTime != null && startTime.isEqual(oldSubtask.getStartTime())) {
+        if (startTime != null && oldSubtask.getStartTime() != null && startTime.isEqual(oldSubtask.getStartTime())) {
             startTime = null;
         }
-        if (endTime != null && endTime.isEqual(oldSubtask.getEndTime())) {
+        if (endTime != null && oldSubtask.getEndTime() != null && endTime.isEqual(oldSubtask.getEndTime())) {
             endTime = null;
         }
     }

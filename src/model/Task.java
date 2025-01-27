@@ -25,7 +25,7 @@ public class Task {
     public Task(String name, String description, LocalDateTime startTime, Duration duration) {
         this(name, description);
         this.startTime = startTime;
-        if (durationValidate(duration)) {
+        if (duration != null &&  durationValidate(duration)) {
             this.duration = duration;
         }
     }

@@ -5,8 +5,13 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringJoiner;
 
 import exceptions.*;
 import model.*;
@@ -23,7 +28,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     private void save() {
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(path.toString(), StandardCharsets.UTF_8))) {
-            bw.write("id,type,name,status,description,epic");
+            bw.write("id,type,name,status,description,startTime,duration,epic");
             bw.newLine();
             for (Task task : getAllTasks()) {
                 bw.write(toString(task));
@@ -43,45 +48,56 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     }
 
     public String toString(Task task) {
-        String epicId = "";
-        if (task instanceof Subtask subtask) {
-            epicId = String.format(",%d", subtask.getEpic().getId());
+        char separator = ',';
+        char separatorToReplace = '.';
+        StringJoiner joiner = new StringJoiner(String.valueOf(separator));
+        joiner.add(String.valueOf(task.getId()));
+        joiner.add(String.valueOf(task.getType()));
+        joiner.add(task.getName() != null ?
+                task.getName().replace(separator, separatorToReplace) : "null");
+        joiner.add(String.valueOf(task.getStatus()));
+        joiner.add(task.getDescription() != null ?
+                task.getDescription().replace(separator,separatorToReplace) : "null");
+        if (task.getType() != TaskType.EPIC) {
+            joiner.add(task.getStartTime() != null ?
+                    String.valueOf(task.getStartTime().toEpochSecond(ZoneOffset.UTC)) : "null");
+            joiner.add(task.getDuration() != null ?
+                    String.valueOf(task.getDuration().get(ChronoUnit.SECONDS)) : "null");
+            if (task.getType() == TaskType.SUBTASK) {
+                joiner.add(String.valueOf(((Subtask) task).getEpic().getId()));
+            }
         }
-        return String.format("%d,%s,%s,%s,%s%s",
-                task.getId(),
-                task.getType(),
-                task.getName() != null ? task.getName().replace(',','.') : "null",
-                task.getStatus(),
-                task.getDescription() != null ? task.getDescription().replace(',','.') : "null",
-                epicId);
+        return joiner.toString();
     }
 
     public Task fromString(String value) {
         try {
             String[] fields = value.split(",");
-            Task task;
-            switch (fields[1]) {
-                case "TASK" -> task = new Task();
-                case "SUBTASK" -> task = new Subtask();
-                case "EPIC" -> task = new Epic();
-                default -> throw new IllegalArgumentException("Неверный формат TaskType");
+            Task task = null;
+            int id = Integer.parseInt(fields[0]);
+            TaskType taskType = TaskType.valueOf(fields[1]);
+            String name = !fields[2].equals("null") ? fields[2] : null;
+            TaskStatus status = TaskStatus.valueOf(fields[3]);
+            String description = !fields[4].equals("null") ? fields[4] : null;
+            LocalDateTime startTime = null;
+            Duration duration = null;
+            if (fields.length > 5) {
+                startTime = !fields[5].equals("null") ?
+                        LocalDateTime.ofEpochSecond(Integer.parseInt(fields[5]),0, ZoneOffset.UTC) : null;
+                duration = !fields[6].equals("null") ?
+                        Duration.ofSeconds(Integer.parseInt(fields[6])) : null;
             }
-            switch (fields[3]) {
-                case "NEW" -> task.setStatus(TaskStatus.NEW);
-                case "IN_PROGRESS" -> task.setStatus(TaskStatus.IN_PROGRESS);
-                case "DONE" -> task.setStatus(TaskStatus.DONE);
-                default -> throw new IllegalArgumentException("Неверный формат TaskStatus");
+            switch (taskType) {
+                case TASK -> task = new Task(name, description, startTime, duration);
+                case SUBTASK -> {
+                    int epicId = Integer.parseInt(fields[7]);
+                    Epic epicOfSubtask = this.getEpic(epicId);
+                    task = new Subtask(name, description, startTime, duration, epicOfSubtask);
+                }
+                case EPIC -> task = new Epic(name, description);
             }
-            task.setId(Integer.parseInt(fields[0]));
-            String taskName = !fields[2].equals("null") ? fields[2] :  null;
-            String taskDescription = !fields[4].equals("null") ? fields[4] : null;
-            task.setName(taskName);
-            task.setDescription(taskDescription);
-            // !!! Эпики должны быть инициализированы раньше, чем субтаски
-            if (task instanceof Subtask subtask) {
-                Integer epicId = Integer.parseInt(fields[5]);
-                subtask.setEpic(this.getEpic(epicId));
-            }
+            task.setStatus(status);
+            task.setId(id);
             return task;
         } catch (Exception ex) {
             throw new ManagerParseTaskException("Неверный формат строки: " + value, ex);

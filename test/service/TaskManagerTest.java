@@ -1,6 +1,9 @@
 package service;
 
 import model.*;
+
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Collections;
 import org.junit.jupiter.api.Test;
@@ -15,9 +18,11 @@ public abstract class TaskManagerTest<T extends TaskManager> {
 
     @BeforeEach
     void init() {
-        task = new Task("Task1_Name","Task1_Description");
+        task = new Task("Task1_Name","Task1_Description",
+                LocalDateTime.of(2025, 1,1,8,0), Duration.ofHours(1));
         epic = new Epic("Epic1_Name", "Epic_Of_One_Subtask");
-        subtask = new Subtask("Subtask1_Name", "Subtask1_Of_Epic1", epic);
+        subtask = new Subtask("Subtask1_Name", "Subtask1_Of_Epic1",
+                LocalDateTime.of(2025,1,2,10,0), Duration.ofMinutes(30), epic);
     }
 
     @Test
