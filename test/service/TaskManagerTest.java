@@ -6,6 +6,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Collections;
+import java.util.SortedSet;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import static org.junit.jupiter.api.Assertions.*;
@@ -30,6 +31,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         manager.createNewTask(task);
         assertEquals(1, manager.getAllTasks().size(), "Не добавился task");
         assertSame(task, manager.getTask(task.getId()), "Не находит task по id");
+        assertSame(task, manager.getPrioritizedTasks().getFirst(), "task не добавился в сортированный список");
     }
 
     @Test
@@ -37,6 +39,8 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         manager.createNewSubtask(subtask);
         assertEquals(1, manager.getAllSubtasks().size(), "Не добавился subtask");
         assertSame(subtask, manager.getSubtask(subtask.getId()), "Не находит subtask по id");
+        assertSame(subtask, manager.getPrioritizedTasks().getFirst(),
+                "subtask не добавился в сортированный список");
     }
 
     @Test
@@ -44,6 +48,8 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         manager.createNewEpic(epic);
         assertEquals(1, manager.getAllEpics().size(), "Не добавился epic");
         assertSame(epic, manager.getEpic(epic.getId()), "Не находит epic по id");
+        assertTrue(manager.getPrioritizedTasks().isEmpty(),
+                "epic не должен был добавиться в сортированный список");
     }
 
     @Test
@@ -84,12 +90,16 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     @Test
     void updateTask() {
         Task task = manager.createNewTask(this.task);
-        Task updTask = new Task(task.getName(), "updatedTask");
+        Task updTask = new Task(task.getName(), "updatedTask",
+                LocalDateTime.of(2025,1,3,0,0), Duration.ofHours(1));
         updTask.setId(task.getId());
         manager.updateTask(updTask);
 
         assertEquals(1, manager.getAllTasks().size(), "Должен остаться 1 task");
         assertNotSame(task, manager.getTask(task.getId()), "Task не заменился в менеджере");
+        assertEquals(1, manager.getPrioritizedTasks().size(),
+                "В сортированном списке должен остаться 1 task");
+        assertSame(updTask, manager.getPrioritizedTasks().getFirst(), "task не заменился в prioritizedTaskSet");
     }
 
     @Test
@@ -108,7 +118,8 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         Epic epic = manager.createNewEpic(this.epic);
         Subtask subtask = manager.createNewSubtask(this.subtask);
 
-        Subtask updSubtask = new Subtask();
+        Subtask updSubtask = new Subtask(subtask.getName(), "updatedSubtask",
+                LocalDateTime.of(2025,1,3,0,0), Duration.ofHours(1));
         updSubtask.setId(subtask.getId());
         updSubtask.setStatus(TaskStatus.IN_PROGRESS);
         updSubtask.setEpic(epic);
@@ -120,6 +131,10 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         assertEquals(1, epic.getSubtasks().size(), "В эпике должен остаться один Subtask");
         assertSame(updSubtask, epic.getSubtasks().getFirst(), "В эпике не обновился Subtask");
         assertEquals(TaskStatus.IN_PROGRESS, epic.getStatus(), "Epic status не обновился");
+        assertEquals(1, manager.getPrioritizedTasks().size(),
+                "В сортированном списке должен остаться 1 task");
+        assertSame(updSubtask, manager.getPrioritizedTasks().getFirst(),
+                "task не заменился в prioritizedTaskSet");
     }
 
     @Test
@@ -140,6 +155,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
 
         assertNull(manager.getTask(taskId), "task не удалился из taskManager");
         assertEquals(Collections.emptyList(), manager.getHistory(), "task не удалился из historyManager");
+        assertTrue(manager.getPrioritizedTasks().isEmpty(), "Не очистился сортированный список");
     }
 
     @Test
@@ -154,6 +170,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         assertNull(manager.getSubtask(subtaskId), "subtask не удалился из taskManager");
         assertTrue(epic.getSubtasks().isEmpty(), "subtask не удалился из epic");
         assertEquals(Collections.emptyList(), manager.getHistory(), "subtask не удалился из historyManager");
+        assertTrue(manager.getPrioritizedTasks().isEmpty(), "Не очистился сортированный список");
     }
 
     @Test
@@ -168,6 +185,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         assertNull(manager.getEpic(epic.getId()), "Не удалился epic");
         assertNull(manager.getSubtask(subtask.getId()), "Не удалился subtask связанный с epic");
         assertEquals(Collections.emptyList(), manager.getHistory(), "Не очистилась история");
+        assertTrue(manager.getPrioritizedTasks().isEmpty(), "Не очистился сортированный список");
     }
 
     @Test
@@ -178,6 +196,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
 
         assertTrue(manager.getAllTasks().isEmpty(), "Не очистился список tasks в менеджере");
         assertFalse(manager.getHistory().contains(task), "Task не удалился из истории");
+        assertTrue(manager.getPrioritizedTasks().isEmpty(), "Не очистился сортированный список");
     }
 
     @Test
@@ -194,6 +213,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         assertFalse(manager.getHistory().contains(epic), "Epic не удалился из истории");
         assertFalse(manager.getHistory().contains(subtask),
                 "Subtask, принадлежащий epic не удалился из истории");
+        assertTrue(manager.getPrioritizedTasks().isEmpty(), "Не очистился сортированный список");
     }
 
     @Test
@@ -211,6 +231,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         assertFalse(manager.getHistory().contains(subtask), "Subtask не удалился из истории");
         assertTrue(manager.getHistory().contains(epic),
                 "Epic, связанный с subtask не должен удалиться истории");
+        assertTrue(manager.getPrioritizedTasks().isEmpty(), "Не очистился сортированный список");
     }
 
     @Test
@@ -244,5 +265,44 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         manager.updateTask(subtask);
         manager.updateTask(subtask2);
         assertEquals(TaskStatus.DONE, epic.getStatus(), "Статус должен быть DONE");
+    }
+
+    @Test
+    void getPrioritizedTasks() {
+        manager.createNewSubtask(subtask);
+        manager.createNewTask(task);
+        manager.createNewEpic(epic);
+        manager.createNewTask(new Task("NullStartTimeTask",""));
+
+        SortedSet<Task> sortedSet = manager.getPrioritizedTasks();
+        assertEquals(2, sortedSet.size(), "В сортированном списке лишние задачи");
+        assertSame(task, sortedSet.getFirst(), "Нарушен порядок сортировки");
+
+        manager.removeTask(subtask.getId());
+        Task updTask = new Task("updatedTask","", LocalDateTime.now(), Duration.ofHours(1));
+        updTask.setId(task.getId());
+        manager.updateTask(updTask);
+        sortedSet = manager.getPrioritizedTasks();
+        assertEquals(1, sortedSet.size(), "Задачи не удалились из сортированного списка");
+        assertSame(updTask, sortedSet.getFirst(), "Задача не обновилась в сортированном списке");
+    }
+
+    @Test
+    void shouldNotAddNullStartTimeTaskInPrioritizedSetWhenUpdateTask() {
+        manager.createNewTask(task);
+        manager.createNewEpic(epic);
+        manager.createNewSubtask(subtask);
+
+        Task taskForUpdate = new Task();
+        Subtask subtaskForUpdate = new Subtask();
+        taskForUpdate.setId(task.getId());
+        subtaskForUpdate.setId(subtask.getId());
+        subtaskForUpdate.setEpic(epic);
+        manager.updateTask(taskForUpdate);
+        manager.updateTask(subtaskForUpdate);
+        SortedSet<Task> sortedSet = manager.getPrioritizedTasks();
+
+        assertTrue(sortedSet.isEmpty(),
+                "Задачи с не заданным startTime не должны попасть в prioritizedTaskSet");
     }
 }

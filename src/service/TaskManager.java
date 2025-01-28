@@ -3,6 +3,7 @@ package service;
 import model.*;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.SortedSet;
 
 public interface TaskManager {
     ArrayList<Task> getAllTasks();
@@ -36,4 +37,6 @@ public interface TaskManager {
     void removeTask(Integer id);
 
     List<Task> getHistory();
+
+    SortedSet<Task> getPrioritizedTasks();
 }
