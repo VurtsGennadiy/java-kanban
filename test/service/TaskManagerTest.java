@@ -247,25 +247,50 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
-    void shouldSetEpicStatusBasedOnSubtasksStatus() {
+    void epicStatusNewWhenSubtasksNew() {
         manager.createNewEpic(epic);
-        epic.setStatus(TaskStatus.DONE);
         Subtask subtask2 = new Subtask("subtask2_name", "subtask2_description", epic);
         manager.createNewSubtask(subtask);
         manager.createNewSubtask(subtask2);
 
         assertEquals(TaskStatus.NEW, epic.getStatus(), "Статус должен быть NEW");
+    }
 
-        subtask2.setStatus(TaskStatus.IN_PROGRESS);
-        manager.updateTask(subtask2);
-        assertEquals(TaskStatus.IN_PROGRESS, epic.getStatus(), "Статус должен быть IN_PROGRESS");
-
+    @Test
+    void epicStatusNewWhenSubtasksDone() {
+        manager.createNewEpic(epic);
+        Subtask subtask2 = new Subtask("subtask2_name", "subtask2_description", epic);
         subtask.setStatus(TaskStatus.DONE);
         subtask2.setStatus(TaskStatus.DONE);
-        manager.updateTask(subtask);
-        manager.updateTask(subtask2);
+        manager.createNewSubtask(subtask);
+        manager.createNewSubtask(subtask2);
+
         assertEquals(TaskStatus.DONE, epic.getStatus(), "Статус должен быть DONE");
     }
+
+    @Test
+    void epicStatusNewWhenSubtasksNewAndDone() {
+        manager.createNewEpic(epic);
+        subtask.setStatus(TaskStatus.DONE);
+        manager.createNewSubtask(subtask);
+        Subtask subtask2 = new Subtask("subtask2_name", "subtask2_description", epic);
+        manager.createNewSubtask(subtask2);
+
+        assertEquals(TaskStatus.IN_PROGRESS, epic.getStatus(), "Статус должен быть IN_PROGRESS");
+    }
+
+    @Test
+    void epicStatusNewWhenSubtasksInProgress() {
+        manager.createNewEpic(epic);
+        Subtask subtask2 = new Subtask("subtask2_name", "subtask2_description", epic);
+        subtask.setStatus(TaskStatus.IN_PROGRESS);
+        subtask2.setStatus(TaskStatus.IN_PROGRESS);
+        manager.createNewSubtask(subtask);
+        manager.createNewSubtask(subtask2);
+
+        assertEquals(TaskStatus.IN_PROGRESS, epic.getStatus(), "Статус должен быть IN_PROGRESS");
+    }
+
 
     @Test
     void getPrioritizedTasks() {

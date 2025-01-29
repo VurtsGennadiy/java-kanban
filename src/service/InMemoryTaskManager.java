@@ -2,6 +2,7 @@ package service;
 
 import model.*;
 import java.util.*;
+import java.util.stream.Stream;
 
 public class InMemoryTaskManager implements TaskManager {
     private final HashMap<Integer, Task> tasks;
@@ -36,37 +37,28 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void clearAllTasks() {
-        for (Task task : tasks.values()) {
-            historyManager.remove(task.getId());
-            prioritizedTaskSet.remove(task);
-        }
+        tasks.keySet().forEach(historyManager::remove);
+        tasks.values().forEach(prioritizedTaskSet::remove);
         tasks.clear();
     }
 
     @Override
     public void clearAllEpics() {
-        for (Epic epic : epics.values()) {
-            historyManager.remove(epic.getId());
-        }
-        for (Subtask subtask : subtasks.values()) {
-            historyManager.remove(subtask.getId());
-            prioritizedTaskSet.remove(subtask);
-        }
+        Stream.concat(epics.keySet().stream(), subtasks.keySet().stream()).forEach(historyManager::remove);
+        subtasks.values().forEach(prioritizedTaskSet::remove);
         epics.clear();
         subtasks.clear();
     }
 
     @Override
     public void clearAllSubtasks() {
-        for (Subtask subtask : subtasks.values()) {
-            historyManager.remove(subtask.getId());
-            prioritizedTaskSet.remove(subtask);
-        }
+        subtasks.keySet().forEach(historyManager::remove);
+        subtasks.values().forEach(prioritizedTaskSet::remove);
         subtasks.clear();
-        for (Epic epic : getAllEpics()) {
+        getAllEpics().forEach(epic -> {
             epic.getSubtasks().clear();
             checkEpicStatus(epic.getId());
-        }
+        });
     }
 
     @Override
@@ -169,12 +161,12 @@ public class InMemoryTaskManager implements TaskManager {
             prioritizedTaskSet.remove(tasks.get(id));
             tasks.remove(id);
         } else if (epics.containsKey(id)) {
-            for (Subtask subtask : epics.get(id).getSubtasks()) {
-                int subtaskId = subtask.getId();
-                subtasks.remove(subtaskId);
-                historyManager.remove(subtaskId);
-                prioritizedTaskSet.remove(subtask);
-            }
+            epics.get(id).getSubtasks().forEach(prioritizedTaskSet::remove);
+            epics.get(id).getSubtasks().stream().map(Subtask::getId)
+                    .forEach(subtaskId -> {
+                        subtasks.remove(subtaskId);
+                        historyManager.remove(subtaskId);
+                    });
             epics.remove(id);
         } else if (subtasks.containsKey(id)) {
             Subtask subtask = subtasks.get(id);
