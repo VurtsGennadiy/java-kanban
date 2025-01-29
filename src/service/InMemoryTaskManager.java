@@ -92,6 +92,9 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public Task createNewTask(Task task) {
+        if (hasIntersect(task)) {
+            return task;
+        }
         task.setId(idCounter);
         tasks.put(idCounter, task);
         updateIdCounter();
@@ -111,6 +114,9 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public Subtask createNewSubtask(Subtask subtask) {
+        if (hasIntersect(subtask)) {
+            return subtask;
+        }
         subtask.setId(idCounter);
         subtasks.put(idCounter, subtask);
         updateIdCounter();
@@ -129,7 +135,9 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public void updateTask(Task updatedTask) {
         Integer id = updatedTask.getId();
-        updatePrioritizedTaskSet(updatedTask);
+        if (!updatePrioritizedTaskSet(updatedTask)) {
+            return;
+        }
         switch (updatedTask.getType()) {
             case TASK:
                 if (tasks.containsKey(id)) {
@@ -152,7 +160,6 @@ public class InMemoryTaskManager implements TaskManager {
                         checkEpicStatus(epic.getId());
                     }
                 }
-                break;
         }
     }
 
@@ -220,14 +227,26 @@ public class InMemoryTaskManager implements TaskManager {
         return Collections.unmodifiableSortedSet(prioritizedTaskSet);
     }
 
-    private void updatePrioritizedTaskSet(Task updatedTask) {
+    private boolean updatePrioritizedTaskSet(Task updatedTask) {
         int id = updatedTask.getId();
         Task taskForRemove = tasks.getOrDefault(id, subtasks.get(id));
         if (taskForRemove != null && taskForRemove.getStartTime() != null) {
             prioritizedTaskSet.remove(taskForRemove);
+            if (hasIntersect(updatedTask)) {
+                prioritizedTaskSet.add(taskForRemove);
+                return false;
+            }
         }
         if (updatedTask.getStartTime() != null) {
             prioritizedTaskSet.add(updatedTask);
         }
+        return true;
+    }
+
+    private boolean hasIntersect(Task task) {
+        if (task instanceof Epic) {
+            return true;
+        }
+        return getPrioritizedTasks().stream().anyMatch(other -> other.isIntersect(task));
     }
 }

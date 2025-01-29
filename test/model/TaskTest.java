@@ -59,4 +59,25 @@ public class TaskTest {
         assertNull(nullDurationTask.getEndTime());
         assertEquals(endTime, haveDurationTask.getEndTime());
     }
+
+    @Test
+    void isIntersect() {
+        LocalDateTime startTime = LocalDateTime.of(2025,1,1,10,3);
+        Task task = new Task("","", startTime, Duration.ofHours(3));
+        Task taskInEnd = new Task("","", task.getEndTime(), Duration.ofHours(1));
+        Task taskAfter = new Task("","", task.getEndTime().plusHours(1), Duration.ofHours(1));
+        Task taskInStart = new Task("","",startTime.minusHours(1), Duration.ofHours(1));
+        Task taskBefore = new Task("","", startTime.minusHours(2), Duration.ofHours(1));
+        Task intersectStart = new Task("","", startTime.plusHours(1), Duration.ofHours(3));
+        Task intersectEnd = new Task("","", startTime.minusHours(1), Duration.ofHours(2));
+        Task intersectAll = new Task("","", startTime, Duration.ofHours(2));
+
+        assertFalse(task.isIntersect(taskInEnd));
+        assertFalse(task.isIntersect(taskAfter));
+        assertFalse(task.isIntersect(taskInStart));
+        assertFalse(task.isIntersect(taskBefore));
+        assertTrue(task.isIntersect(intersectStart));
+        assertTrue(task.isIntersect(intersectEnd));
+        assertTrue(task.isIntersect(intersectAll));
+    }
 }

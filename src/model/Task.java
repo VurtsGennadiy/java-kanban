@@ -109,6 +109,17 @@ public class Task {
         return result + "}";
     }
 
+    public boolean isIntersect(Task other) {
+        if (this.getEndTime() == null || other.getEndTime() == null) {
+            return false;
+        }
+        // this.start ---- this.end   other.start ---- other.end
+        boolean isBefore = !this.getEndTime().isAfter(other.getStartTime());
+        // other.start ---- other.end   this.start ---- this.end
+        boolean isAfter = !this.getStartTime().isBefore(other.getEndTime());
+        return !(isBefore || isAfter);
+    }
+
     private boolean durationValidate(Duration duration) {
         if (duration.getSeconds() <= 0) {
             throw new IllegalArgumentException("Длительность задачи должна быть положительная: "

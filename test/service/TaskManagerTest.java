@@ -304,5 +304,36 @@ public abstract class TaskManagerTest<T extends TaskManager> {
 
         assertTrue(sortedSet.isEmpty(),
                 "Задачи с не заданным startTime не должны попасть в prioritizedTaskSet");
+        assertEquals(1, manager.getAllTasks().size());
+        assertSame(taskForUpdate, manager.getAllTasks().getFirst());
+        assertEquals(1, manager.getAllSubtasks().size());
+        assertSame(subtaskForUpdate, manager.getAllSubtasks().getFirst());
+    }
+
+    @Test
+    void shouldNoCreateTaskWhenHasIntersect() {
+        LocalDateTime startTime = LocalDateTime.of(2025,1,1,10,0);
+        Task task = new Task("", "", startTime, Duration.ofHours(4));
+        Task taskWithIntersect = new Task("", "", startTime, Duration.ofHours(1));
+        manager.createNewTask(task);
+        manager.createNewTask(taskWithIntersect);
+
+        assertEquals(1, manager.getAllTasks().size());
+    }
+
+    @Test
+    void shouldNoUpdateTaskWhenHasIntersect() {
+        LocalDateTime startTime = LocalDateTime.of(2025,1,1,10,0);
+        Task task1 = new Task("", "", startTime, Duration.ofHours(4));
+        Task task2 = new Task("","", task1.getEndTime(), Duration.ofHours(4));
+        Task taskForUpdate = new Task("","", task2.getStartTime(), Duration.ofHours(1));
+        manager.createNewTask(task1);
+        manager.createNewTask(task2);
+        taskForUpdate.setId(task1.getId());
+        manager.updateTask(taskForUpdate);
+
+        assertTrue(task2.isIntersect(taskForUpdate));
+        assertEquals(2, manager.getAllTasks().size(), "Задача не должна удалиться из менеджера");
+        assertSame(task1, manager.getPrioritizedTasks().getFirst());
     }
 }
