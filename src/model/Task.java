@@ -1,6 +1,7 @@
 package model;
 
 import java.util.Objects;
+import java.util.StringJoiner;
 import java.time.LocalDateTime;
 import java.time.Duration;
 
@@ -97,16 +98,14 @@ public class Task {
 
     @Override
     public String toString() {
-        String result = "Task{" +
-                "id='" + id + "'" +
-                ", status=" + status +
-                ", name='" + name + '\'';
-        if (description != null) {
-            result += ", description.length='" + description.length() + "'";
-        } else {
-            result += ", description=null";
-        }
-        return result + "}";
+        StringJoiner joiner = new StringJoiner(", ", "Task{", "}");
+        joiner.add("id=" + id);
+        joiner.add("status='" + status + "'");
+        joiner.add("name='" + name + "'");
+        joiner.add("description=" + (description == null ? "null" : description.length()));
+        joiner.add("startTime=" + startTime);
+        joiner.add("duration=" + duration);
+        return joiner.toString();
     }
 
     public boolean isIntersect(Task other) {

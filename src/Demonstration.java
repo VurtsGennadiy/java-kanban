@@ -4,6 +4,8 @@ import service.TaskManager;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.nio.file.Path;
 
@@ -62,11 +64,14 @@ public class Demonstration {
     }
 
     void createTasks() {
-        Task task1 = new Task("Task1_Name","Task1_Description");
+        Task task1 = new Task("Task1_Name","Task1_Description",
+                LocalDateTime.of(2025,1,1,10,0), Duration.ofMinutes(30));
         Task task2 = new Task("Task2_Name","Task2_Description");
 
-        Subtask subtask1 = new Subtask("Subtask1_Name", "Subtask1_OfEpic1");
-        Subtask subtask2 = new Subtask("Subtask2_Name", "Subtask2_OfEpic1");
+        Subtask subtask1 = new Subtask("Subtask1_Name", "Subtask1_OfEpic1",
+                LocalDateTime.of(2025,1,2,9,0), Duration.ofHours(1));
+        Subtask subtask2 = new Subtask("Subtask2_Name", "Subtask2_OfEpic1",
+                LocalDateTime.of(2025, 1,3,10,0), Duration.ofDays(1));
         Subtask subtask3 = new Subtask("Subtask3_Name", "Subtask3_OfEpic1");
         ArrayList<Subtask> subtasksOfEpic1 = new ArrayList<>();
         subtasksOfEpic1.add(subtask1);

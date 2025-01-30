@@ -3,6 +3,7 @@ package model;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.StringJoiner;
 
 public class Epic extends Task {
     private final ArrayList<Subtask> subtasks;
@@ -53,17 +54,15 @@ public class Epic extends Task {
 
     @Override
     public String toString() {
-        String result = "Epic{" +
-                "id='" + id + "'" +
-                ", status=" + status +
-                ", name='" + name + '\'';
-        if (description != null) {
-            result += ", description.length='" + description.length() + "'";
-        } else {
-            result += ", description=null";
-        }
-        result += ", subtasks.count='" + subtasks.size() + "'}";
-        return result;
+        StringJoiner joiner = new StringJoiner(", ", "Epic{", "}");
+        joiner.add("id=" + id);
+        joiner.add("status='" + status + "'");
+        joiner.add("name='" + name + "'");
+        joiner.add("description=" + (description == null ? "null" : description.length()));
+        joiner.add("subtasks.count=" + subtasks.size());
+        joiner.add("startTime=" + startTime);
+        joiner.add("duration=" + duration);
+        return joiner.toString();
     }
 
     @Override

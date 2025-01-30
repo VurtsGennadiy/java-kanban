@@ -2,6 +2,7 @@ package model;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.StringJoiner;
 
 public class Subtask extends Task {
     private Epic epic;
@@ -49,16 +50,14 @@ public class Subtask extends Task {
 
     @Override
     public String toString() {
-        String result = "Subtask{" +
-                "id='" + id + "'" +
-                ", EpicId='" + (epic != null ? epic.id : "null") + "'" +
-                ", status=" + status +
-                ", name='" + name + '\'';
-        if (description != null) {
-            result += ", description.length='" + description.length() + "'";
-        } else {
-            result += ", description=null";
-        }
-        return result + "}";
+        StringJoiner joiner = new StringJoiner(", ", "Subtask{", "}");
+        joiner.add("id=" + id);
+        joiner.add("EpicId=" + (epic == null ? "null" : epic.getId()));
+        joiner.add("status='" + status + "'");
+        joiner.add("name='" + name + "'");
+        joiner.add("description=" + (description == null ? "null" : description.length()));
+        joiner.add("startTime=" + startTime);
+        joiner.add("duration=" + duration);
+        return joiner.toString();
     }
 }
