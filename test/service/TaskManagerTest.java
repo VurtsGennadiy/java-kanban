@@ -1,5 +1,6 @@
 package service;
 
+import exceptions.ManagerCreateTaskException;
 import model.*;
 
 import java.time.Duration;
@@ -7,6 +8,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Collections;
 import java.util.SortedSet;
+
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import static org.junit.jupiter.api.Assertions.*;
@@ -36,7 +39,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
 
     @Test
     void createNewSubtaskAndFindById() {
-        manager.createNewSubtask(subtask);
+        manager.createNewEpic(epic);
         assertEquals(1, manager.getAllSubtasks().size(), "Не добавился subtask");
         assertSame(subtask, manager.getSubtask(subtask.getId()), "Не находит subtask по id");
         assertSame(subtask, manager.getPrioritizedTasks().getFirst(),
@@ -46,10 +49,24 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     @Test
     void createNewEpicAndFindById() {
         manager.createNewEpic(epic);
+        SortedSet<Task> sortedSet = manager.getPrioritizedTasks();
+
         assertEquals(1, manager.getAllEpics().size(), "Не добавился epic");
+        assertEquals(1, manager.getAllSubtasks().size(), "Subtask из эпика не добавился в менеджер");
         assertSame(epic, manager.getEpic(epic.getId()), "Не находит epic по id");
-        assertTrue(manager.getPrioritizedTasks().isEmpty(),
-                "epic не должен был добавиться в сортированный список");
+        assertEquals(1, sortedSet.size(), "В sortedSet должен попасть только subtask");
+        assertSame(subtask, sortedSet.getFirst());
+    }
+
+    @Test
+    void createNewEpicContainsSubtasks() {
+        Subtask subtask2 = new Subtask("","", epic);
+        Subtask subtask3 = new Subtask("","", epic);
+
+        manager.createNewEpic(epic);
+
+        assertEquals(3, epic.getSubtasks().size(), "Subtasks не добавились в эпик");
+        assertEquals(3, manager.getAllSubtasks().size(), "Subtasks не добавились в менеджер");
     }
 
     @Test
@@ -65,7 +82,8 @@ public abstract class TaskManagerTest<T extends TaskManager> {
 
     @Test
     void createNewSubtask_shouldNoChangeSubtaskFields() {
-        Subtask addedSubtask = new Subtask(subtask.getName(), subtask.getDescription(), subtask.getEpic());
+        manager.createNewEpic(epic);
+        Subtask addedSubtask = new Subtask(subtask.getName(), subtask.getDescription(), epic);
         addedSubtask.setStatus(subtask.getStatus());
         addedSubtask = manager.createNewSubtask(addedSubtask);
 
@@ -84,7 +102,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         assertEquals(epic.getName(), addedEpic.getName(), "Изменилось поле Name");
         assertEquals(epic.getDescription(), addedEpic.getDescription(), "Изменилось поле Description");
         assertEquals(epic.getStatus(), addedEpic.getStatus(), "Изменилось поле Status");
-        assertSame(epic.getSubtasks(), addedEpic.getSubtasks(), "Изменилось поле Subtasks");
+        assertEquals(epic.getSubtasks(), addedEpic.getSubtasks(), "Изменился список subtasks");
     }
 
     @Test
@@ -116,7 +134,6 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     @Test
     void updateSubtask() {
         Epic epic = manager.createNewEpic(this.epic);
-        Subtask subtask = manager.createNewSubtask(this.subtask);
 
         Subtask updSubtask = new Subtask(subtask.getName(), "updatedSubtask",
                 LocalDateTime.of(2025,1,3,0,0), Duration.ofHours(1));
@@ -140,7 +157,6 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     @Test
     void getSubtasksOfEpic() {
         Epic epic = manager.createNewEpic(this.epic);
-        Subtask subtask = manager.createNewSubtask(this.subtask);
         List<Subtask> subtasks = manager.getSubtasksOfEpic(epic.getId());
         assertSame(subtask, subtasks.getFirst(), "Subtask не добавился в Epic");
     }
@@ -160,7 +176,6 @@ public abstract class TaskManagerTest<T extends TaskManager> {
 
     @Test
     void removeSubtaskById() {
-        manager.createNewSubtask(subtask);
         manager.createNewEpic(epic);
         int subtaskId = subtask.getId();
 
@@ -176,7 +191,6 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     @Test
     void removeEpicById() {
         manager.createNewEpic(epic);
-        manager.createNewSubtask(subtask);
 
         manager.getSubtask(subtask.getId());
         manager.getEpic(epic.getId());
@@ -201,7 +215,6 @@ public abstract class TaskManagerTest<T extends TaskManager> {
 
     @Test
     void clearAllEpics() {
-        manager.createNewSubtask(subtask);
         manager.createNewEpic(epic);
         manager.getSubtask(subtask.getId());
         manager.getEpic(epic.getId());
@@ -218,7 +231,6 @@ public abstract class TaskManagerTest<T extends TaskManager> {
 
     @Test
     void clearAllSubtasks() {
-        manager.createNewSubtask(subtask);
         manager.createNewEpic(epic);
         manager.getSubtask(subtask.getId());
         manager.getEpic(epic.getId());
@@ -250,7 +262,6 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     void epicStatusNewWhenSubtasksNew() {
         manager.createNewEpic(epic);
         Subtask subtask2 = new Subtask("subtask2_name", "subtask2_description", epic);
-        manager.createNewSubtask(subtask);
         manager.createNewSubtask(subtask2);
 
         assertEquals(TaskStatus.NEW, epic.getStatus(), "Статус должен быть NEW");
@@ -262,7 +273,6 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         Subtask subtask2 = new Subtask("subtask2_name", "subtask2_description", epic);
         subtask.setStatus(TaskStatus.DONE);
         subtask2.setStatus(TaskStatus.DONE);
-        manager.createNewSubtask(subtask);
         manager.createNewSubtask(subtask2);
 
         assertEquals(TaskStatus.DONE, epic.getStatus(), "Статус должен быть DONE");
@@ -272,7 +282,6 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     void epicStatusNewWhenSubtasksNewAndDone() {
         manager.createNewEpic(epic);
         subtask.setStatus(TaskStatus.DONE);
-        manager.createNewSubtask(subtask);
         Subtask subtask2 = new Subtask("subtask2_name", "subtask2_description", epic);
         manager.createNewSubtask(subtask2);
 
@@ -285,7 +294,6 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         Subtask subtask2 = new Subtask("subtask2_name", "subtask2_description", epic);
         subtask.setStatus(TaskStatus.IN_PROGRESS);
         subtask2.setStatus(TaskStatus.IN_PROGRESS);
-        manager.createNewSubtask(subtask);
         manager.createNewSubtask(subtask2);
 
         assertEquals(TaskStatus.IN_PROGRESS, epic.getStatus(), "Статус должен быть IN_PROGRESS");
@@ -294,7 +302,6 @@ public abstract class TaskManagerTest<T extends TaskManager> {
 
     @Test
     void getPrioritizedTasks() {
-        manager.createNewSubtask(subtask);
         manager.createNewTask(task);
         manager.createNewEpic(epic);
         manager.createNewTask(new Task("NullStartTimeTask",""));
@@ -316,7 +323,6 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     void shouldNotAddNullStartTimeTaskInPrioritizedSetWhenUpdateTask() {
         manager.createNewTask(task);
         manager.createNewEpic(epic);
-        manager.createNewSubtask(subtask);
 
         Task taskForUpdate = new Task();
         Subtask subtaskForUpdate = new Subtask();
@@ -336,14 +342,27 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
+    @DisplayName("Не добавлять задачу, если есть пересечение по времени")
     void shouldNoCreateTaskWhenHasIntersect() {
         LocalDateTime startTime = LocalDateTime.of(2025,1,1,10,0);
         Task task = new Task("", "", startTime, Duration.ofHours(4));
         Task taskWithIntersect = new Task("", "", startTime, Duration.ofHours(1));
         manager.createNewTask(task);
-        manager.createNewTask(taskWithIntersect);
+        assertThrows(ManagerCreateTaskException.class, () -> manager.createNewTask(taskWithIntersect));
 
         assertEquals(1, manager.getAllTasks().size());
+    }
+
+    @Test
+    @DisplayName("Не добавлять эпик, если у его сабтаски есть пересечение")
+    void shouldNoCreateEpicWhenHerSubtaskHasIntersect() {
+        Subtask sub2 = new Subtask("","", task.getStartTime(), Duration.ofHours(1), epic);
+        manager.createNewTask(task);
+
+        assertThrows(ManagerCreateTaskException.class, () -> manager.createNewEpic(epic));
+        assertEquals(2, epic.getSubtasks().size());
+        assertTrue(manager.getAllEpics().isEmpty());
+        assertTrue(manager.getAllSubtasks().isEmpty());
     }
 
     @Test

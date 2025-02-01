@@ -19,22 +19,17 @@ public class Epic extends Task {
     }
 
     public Epic(String name, String description, ArrayList<Subtask> subtasks) {
-        super(name, description);
-        this.subtasks = subtasks;
-        for (Subtask subtask : subtasks) {
-            if (subtask.getEpic() != this) {
-                subtask.setEpic(this);
-            }
-            updateTime(subtask);
-        }
+        this(name, description);
+        subtasks.forEach(this::addSubtask);
     }
 
     public void addSubtask(Subtask subtask) {
-        if (!subtasks.contains(subtask)) {
-            subtasks.add(subtask);
+        if (subtask.getEpic() == this) {
+            return;
         }
-        subtask.setEpic(this);
+        subtasks.add(subtask);
         updateTime(subtask);
+        subtask.setEpic(this);
     }
 
     public void updateSubtask(Subtask oldSubtask, Subtask newSubtask) {
@@ -74,17 +69,17 @@ public class Epic extends Task {
         LocalDateTime newTaskStartTime = subtask.getStartTime();
         Duration newTaskDuration = subtask.getDuration();
         LocalDateTime newTaskEndTime = subtask.getEndTime();
-        if (startTime == null || newTaskStartTime == null || startTime.isAfter(newTaskStartTime)) {
+        if (startTime == null || (newTaskStartTime != null && startTime.isAfter(newTaskStartTime))) {
             startTime = newTaskStartTime;
         }
 
         if (duration == null) {
             duration = newTaskDuration;
         } else if (newTaskDuration != null) {
-            duration = duration.plus(newTaskDuration); // plus null
+            duration = duration.plus(newTaskDuration);
         }
 
-        if (endTime == null || newTaskEndTime == null || newTaskEndTime.isAfter(endTime)) {
+        if (endTime == null || (newTaskEndTime != null && newTaskEndTime.isAfter(endTime))) {
             endTime = newTaskEndTime;
         }
     }

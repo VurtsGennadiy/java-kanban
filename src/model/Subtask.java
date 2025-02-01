@@ -37,10 +37,13 @@ public class Subtask extends Task {
     }
 
     public void setEpic(Epic epic) {
-        this.epic = epic;
-        if (epic != null && !epic.getSubtasks().contains(this)) {
+        // проверяем что метод вызван не из Epic
+        StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+        boolean fromEpic = stackTrace[2].getClassName().equals(Epic.class.getName());
+        if (!fromEpic && epic != null) {
             epic.addSubtask(this);
         }
+        this.epic = epic;
     }
 
     @Override

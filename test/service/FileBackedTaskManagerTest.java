@@ -48,6 +48,7 @@ public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskMan
         super.createNewSubtaskAndFindById();
         try (BufferedReader reader = new BufferedReader(new FileReader(path.toString()))) {
             reader.readLine(); // skip title
+            Epic recordEpic = (Epic) manager.fromString(reader.readLine());
             Subtask recordSubtask = (Subtask) manager.fromString(reader.readLine());
 
             assertFalse(reader.ready(), "В файл записаны лишние строки");
@@ -64,6 +65,7 @@ public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskMan
         try (BufferedReader reader = new BufferedReader(new FileReader(path.toString()))) {
             reader.readLine(); // skip title
             Epic recordEpic = (Epic) manager.fromString(reader.readLine());
+            Subtask recordSub = (Subtask) manager.fromString(reader.readLine());
 
             assertFalse(reader.ready(), "В файл записаны лишние строки");
             assertEquals(epic, recordEpic, "Epic некорректно сохранился в файл");
@@ -96,10 +98,11 @@ public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskMan
         try (BufferedReader reader = new BufferedReader(new FileReader(path.toString()))) {
             reader.readLine(); // skip title
             Epic recordEpic = (Epic) manager.fromString(reader.readLine());
+            Subtask recordSub = (Subtask) manager.fromString(reader.readLine());
 
             assertFalse(reader.ready(), "В файл записаны лишние строки");
-            assertEquals(task.getId(), recordEpic.getId(), "id задачи не должен измениться");
-            assertNotEquals(task.getDescription(), recordEpic.getDescription(),
+            assertEquals(epic.getId(), recordEpic.getId(), "id задачи не должен измениться");
+            assertNotEquals(epic.getDescription(), recordEpic.getDescription(),
                     "обновленный description не записался в файл");
         } catch (IOException ex) {
             ex.printStackTrace();

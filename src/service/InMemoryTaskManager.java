@@ -1,7 +1,9 @@
 package service;
 
+import exceptions.ManagerCreateTaskException;
 import model.*;
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 public class InMemoryTaskManager implements TaskManager {
@@ -85,7 +87,7 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public Task createNewTask(Task task) {
         if (hasIntersect(task)) {
-            return task;
+            throw new ManagerCreateTaskException("Задача пересекается по времени с другой задачей");
         }
         task.setId(idCounter);
         tasks.put(idCounter, task);
@@ -98,26 +100,30 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public Epic createNewEpic(Epic epic) {
+        if (hasIntersect(epic)) {
+            throw new ManagerCreateTaskException("Подзадачи эпика имеют пересечение по времени с другой задачей");
+        }
         epic.setId(idCounter);
         epics.put(idCounter, epic);
         updateIdCounter();
+        epic.getSubtasks().forEach(this::createNewSubtask);
         return epic;
     }
 
     @Override
     public Subtask createNewSubtask(Subtask subtask) {
+        Epic epic = subtask.getEpic();
+        if (epic == null || !getAllEpics().contains(epic)) {
+            throw new ManagerCreateTaskException("Эпик подзадачи null или не найден");
+        }
         if (hasIntersect(subtask)) {
-            return subtask;
+            throw new ManagerCreateTaskException("Подзадача пересекается по времени с другой задачей");
         }
         subtask.setId(idCounter);
         subtasks.put(idCounter, subtask);
         updateIdCounter();
-
-        Epic epic = subtask.getEpic();
-        if (epic != null) {
-            epic.addSubtask(subtask);
-            checkEpicStatus(epic.getId());
-        }
+        epic.addSubtask(subtask);
+        checkEpicStatus(epic.getId());
         if (subtask.getStartTime() != null) {
             prioritizedTaskSet.add(subtask);
         }
@@ -158,29 +164,22 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public void removeTask(Integer id) {
         if (tasks.containsKey(id)) {
-            Task task = tasks.get(id);
-            if (task.getStartTime() != null) {
-                prioritizedTaskSet.remove(task);
-            }
+            removeFromPrioritizedTaskSet(tasks.get(id));
             tasks.remove(id);
         } else if (epics.containsKey(id)) {
-            epics.get(id).getSubtasks().stream()
-                    .filter(subtask -> subtask.getStartTime() != null)
-                    .forEach(prioritizedTaskSet::remove);
             epics.get(id).getSubtasks().stream().map(Subtask::getId)
                     .forEach(subtaskId -> {
                         subtasks.remove(subtaskId);
                         historyManager.remove(subtaskId);
                     });
+            removeFromPrioritizedTaskSet(epics.get(id));
             epics.remove(id);
         } else if (subtasks.containsKey(id)) {
             Subtask subtask = subtasks.get(id);
             subtask.getEpic().getSubtasks().remove(subtask);
             checkEpicStatus(subtask.getEpic().getId());
+            removeFromPrioritizedTaskSet(subtask);
             subtasks.remove(id);
-            if (subtask.getStartTime() != null) {
-                prioritizedTaskSet.remove(subtask);
-            }
         }
         historyManager.remove(id);
     }
@@ -242,10 +241,27 @@ public class InMemoryTaskManager implements TaskManager {
         return true;
     }
 
-    private boolean hasIntersect(Task task) {
-        if (task instanceof Epic) {
-            return true;
+    private void removeFromPrioritizedTaskSet(Task task) {
+        if (task.getStartTime() == null) {
+            return;
         }
-        return getPrioritizedTasks().stream().anyMatch(other -> other.isIntersect(task));
+        if (task instanceof Epic epic) {
+            epic.getSubtasks().forEach(prioritizedTaskSet::remove);
+        } else {
+            prioritizedTaskSet.remove(task);
+        }
+    }
+
+    private boolean hasIntersect(Task task) {
+        Predicate<Task> checkIntersect = new Predicate<Task>() {
+            @Override
+            public boolean test(Task task) {
+                return getPrioritizedTasks().stream().anyMatch(other -> other.isIntersect(task));
+            }
+        };
+        if (task instanceof Epic epic) {
+            return epic.getSubtasks().stream().anyMatch(checkIntersect);
+        }
+        return checkIntersect.test(task);
     }
 }

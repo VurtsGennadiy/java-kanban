@@ -1,5 +1,6 @@
 package model;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -104,5 +105,26 @@ public class EpicTest {
         assertEquals(updatedStartTime, epic.getStartTime(), "Не обновился startTime");
         assertEquals(updatedStartTime.plus(updatedDuration), epic.getEndTime(), "Не обновился endTime");
         assertEquals(updatedDuration, epic.getDuration(), "Не обновился duration");
+    }
+
+    @Test
+    @DisplayName("Пустой Эпик Начало NULL")
+    void emptyEpicStartTimeTest() {
+        Epic epic = new Epic();
+        assertNull(epic.getStartTime());
+    }
+
+    @Test
+    @DisplayName("Пустой Эпик Окончание NULL")
+    void emptyEpicEndTimeTest() {
+        Epic epic = new Epic();
+        assertNull(epic.getEndTime());
+    }
+
+    @Test
+    @DisplayName("Пустой Эпик Длительность 0")
+    void emptyEpicDurationTest() {
+        Epic epic = new Epic();
+        assertNull(epic.getDuration());
     }
 }
