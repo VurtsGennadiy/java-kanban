@@ -1,6 +1,6 @@
 package service;
 
-import exceptions.ManagerCreateTaskException;
+import exceptions.TaskHasIntersectException;
 import model.*;
 
 import java.time.Duration;
@@ -348,7 +348,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         Task task = new Task("", "", startTime, Duration.ofHours(4));
         Task taskWithIntersect = new Task("", "", startTime, Duration.ofHours(1));
         manager.createNewTask(task);
-        assertThrows(ManagerCreateTaskException.class, () -> manager.createNewTask(taskWithIntersect));
+        assertThrows(TaskHasIntersectException.class, () -> manager.createNewTask(taskWithIntersect));
 
         assertEquals(1, manager.getAllTasks().size());
     }
@@ -359,7 +359,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         Subtask sub2 = new Subtask("","", task.getStartTime(), Duration.ofHours(1), epic);
         manager.createNewTask(task);
 
-        assertThrows(ManagerCreateTaskException.class, () -> manager.createNewEpic(epic));
+        assertThrows(TaskHasIntersectException.class, () -> manager.createNewEpic(epic));
         assertEquals(2, epic.getSubtasks().size());
         assertTrue(manager.getAllEpics().isEmpty());
         assertTrue(manager.getAllSubtasks().isEmpty());

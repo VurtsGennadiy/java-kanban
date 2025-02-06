@@ -2,6 +2,7 @@ package gsonadapters;
 
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 import model.Subtask;
 
@@ -34,7 +35,45 @@ public class SubtaskAdapter extends TypeAdapter<Subtask> {
 
     // TODO
     @Override
-    public Subtask read(JsonReader jsonReader) throws IOException {
-        return null;
+    public Subtask read(JsonReader in) throws IOException {
+        if (in.peek() == JsonToken.NULL) {
+            in.nextNull();
+            return null;
+        }
+        String name = "";
+        String description = "";
+        int id = -1;
+        LocalDateTime startTime = null;
+        Duration duration = null;
+        int epicId = -1;
+
+        Subtask subtask = new Subtask();
+        in.beginObject();
+        while (in.hasNext()) {
+            switch (in.nextName()) {
+                case "name" -> name = in.nextString();
+                case "description" -> description = in.nextString();
+                case "id" -> id = in.nextInt();
+                case "startTime" -> {
+                    String startTimeIn = in.nextString();
+                    startTime = startTimeIn != null ? LocalDateTime.parse(startTimeIn) : null;
+                }
+                case "duration" -> {
+                    String durationIn = in.nextString();
+                    duration = durationIn != null ? Duration.parse(durationIn) : null;
+                }
+                case "epicId" -> epicId = in.nextInt();
+                default -> in.skipValue();
+            }
+        }
+        subtask = new Subtask(name, description, startTime, duration);
+        if (id != -1) {
+            subtask.setId(id);
+        }
+        if (epicId != -1) {
+            subtask.setEpicId(epicId);
+        }
+        in.endObject();
+        return subtask;
     }
 }

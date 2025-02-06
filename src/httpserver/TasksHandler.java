@@ -4,6 +4,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.net.httpserver.HttpExchange;
+import exceptions.TaskHasIntersectException;
 import model.Task;
 import service.TaskManager;
 
@@ -68,7 +69,12 @@ public class TasksHandler extends BaseHttpHandler {
         JsonElement inputId = inputJson.get("id");
         Task task = gson.fromJson(inputJson, Task.class);
         if (inputId == null) {
-            taskManager.createNewTask(task);
+            try {
+                taskManager.createNewTask(task);
+            } catch (TaskHasIntersectException exception) {
+                sendHasIntersections(exchange);
+                return;
+            }
         } else {
             taskManager.updateTask(task);
         }

@@ -47,7 +47,14 @@ abstract class BaseHttpHandler implements HttpHandler {
 
     // ТЗ
     // TODO
-    public void sendHasIntersections() {}
+    public void sendHasIntersections(HttpExchange exchange) {
+        try (exchange; OutputStream os = exchange.getResponseBody()) {
+            exchange.sendResponseHeaders(406, 0);
+            os.write("Невозможно добавить задачу, есть пересечение по времени.".getBytes(DEFAULT_CHARSET));
+        } catch (Exception e) {
+            System.out.println("Ошибка отправки ответа от сервера");
+        }
+    }
 
     public void sendEmpty(HttpExchange exchange, int code)   {
         try (exchange) {

@@ -6,6 +6,7 @@ import java.util.StringJoiner;
 
 public class Subtask extends Task {
     private Epic epic;
+    private int epicId;
 
     public Subtask() {
     }
@@ -25,6 +26,14 @@ public class Subtask extends Task {
         super(name, description, startTime, duration);
         epic = new Epic();
         epic.addSubtask(this);
+    }
+
+    public int getEpicId() {
+        return epicId;
+    }
+
+    public void setEpicId(int epicId) {
+        this.epicId = epicId;
     }
 
     public Subtask(String name, String description, LocalDateTime startTime, Duration duration, Epic epic) {

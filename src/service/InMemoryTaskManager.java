@@ -1,6 +1,7 @@
 package service;
 
 import exceptions.ManagerCreateTaskException;
+import exceptions.TaskHasIntersectException;
 import model.*;
 import java.util.*;
 import java.util.function.Predicate;
@@ -87,7 +88,7 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public Task createNewTask(Task task) {
         if (hasIntersect(task)) {
-            throw new ManagerCreateTaskException("Задача пересекается по времени с другой задачей");
+            throw new TaskHasIntersectException("Задача пересекается по времени с другой задачей");
         }
         task.setId(idCounter);
         tasks.put(idCounter, task);
@@ -101,7 +102,7 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public Epic createNewEpic(Epic epic) {
         if (hasIntersect(epic)) {
-            throw new ManagerCreateTaskException("Подзадачи эпика имеют пересечение по времени с другой задачей");
+            throw new TaskHasIntersectException("Подзадачи эпика имеют пересечение по времени с другой задачей");
         }
         epic.setId(idCounter);
         epics.put(idCounter, epic);
@@ -117,7 +118,7 @@ public class InMemoryTaskManager implements TaskManager {
             throw new ManagerCreateTaskException("Эпик подзадачи null или не найден");
         }
         if (hasIntersect(subtask)) {
-            throw new ManagerCreateTaskException("Подзадача пересекается по времени с другой задачей");
+            throw new TaskHasIntersectException("Подзадача пересекается по времени с другой задачей");
         }
         subtask.setId(idCounter);
         subtasks.put(idCounter, subtask);
