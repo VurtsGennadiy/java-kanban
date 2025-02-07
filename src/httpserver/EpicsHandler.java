@@ -4,7 +4,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.net.httpserver.HttpExchange;
-import exceptions.TaskHasIntersectException;
+import exceptions.ManagerCreateTaskException;
+import exceptions.TaskNotFoundException;
 import model.Epic;
 import model.Subtask;
 import service.TaskManager;
@@ -68,40 +69,44 @@ public class EpicsHandler extends BaseHttpHandler{
         JsonObject inputJson = JsonParser.parseString(body).getAsJsonObject();
         JsonElement inputId = inputJson.get("id");
         Epic epic = gson.fromJson(inputJson, Epic.class);
-        if (inputId == null) {
-            try {
+        try {
+            if (inputId == null) {
                 taskManager.createNewEpic(epic);
-            } catch (TaskHasIntersectException exception) {
-                sendHasIntersections(exchange);
-                return;
+            } else {
+                taskManager.updateEpic(epic);
             }
-        } else {
-            taskManager.updateTask(epic);
+            sendEmpty(exchange, 201);
+        } catch (ManagerCreateTaskException exception) {
+            sendNotAcceptable(exchange, exception.getMessage());
+        } catch (TaskNotFoundException exception) {
+            sendNotFound(exchange);
         }
-        sendEmpty(exchange, 201);
     }
 
     private void handleDeleteEpicById(int id, HttpExchange exchange) {
-        taskManager.removeTask(id);
-        sendEmpty(exchange, 200);
+        try {
+            taskManager.removeEpic(id);
+            sendEmpty(exchange, 200);
+        } catch (TaskNotFoundException exception) {
+            sendNotFound(exchange);
+        }
     }
 
     private void handleGetEpicSubtasks(int epicId, HttpExchange exchange) {
-        Epic epic = taskManager.getEpic(epicId);
-        if (epic == null) {
-            sendNotFound(exchange);
-        } else {
-            List<Subtask> subtasks = epic.getSubtasks();
+        try {
+            List<Subtask> subtasks = taskManager.getSubtasksOfEpic(epicId);
             sendText(exchange, gson.toJson(subtasks));
+        } catch (TaskNotFoundException exception) {
+            sendNotFound(exchange);
         }
     }
 
     private void handleGetEpicById(int id, HttpExchange exchange) {
-        Epic epic = taskManager.getEpic(id);
-        if (epic == null) {
-            sendNotFound(exchange);
-        } else {
+        try {
+            Epic epic = taskManager.getEpic(id);
             sendText(exchange, gson.toJson(epic));
+        } catch (TaskNotFoundException exception) {
+            sendNotFound(exchange);
         }
     }
 

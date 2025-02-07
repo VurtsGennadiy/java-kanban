@@ -14,19 +14,19 @@ public class Task {
     protected Duration duration;
 
     public Task() {
-        status = TaskStatus.NEW;
+        this("","", null, null);
     }
 
     public Task(String name, String description) {
-        this.name = name;
-        this.description = description;
-        status = TaskStatus.NEW;
+        this(name, description, null,null);
     }
 
     public Task(String name, String description, LocalDateTime startTime, Duration duration) {
-        this(name, description);
+        this.name = name;
+        this.description = description;
         this.startTime = startTime;
-        if (duration != null &&  durationValidate(duration)) {
+        status = TaskStatus.NEW;
+        if (duration != null && durationValidate(duration)) {
             this.duration = duration;
         }
     }
@@ -102,13 +102,24 @@ public class Task {
         joiner.add("id=" + id);
         joiner.add("status='" + status + "'");
         joiner.add("name='" + name + "'");
-        joiner.add("description=" + (description == null ? "null" : description.length()));
+        joiner.add("description.length=" + description.length());
         joiner.add("startTime=" + startTime);
         joiner.add("duration=" + duration);
         return joiner.toString();
     }
 
+    /**
+     * Checks if there is a time overlap between tasks.
+     * @return true - if there is overlap, false - if not
+     */
     public boolean isIntersect(Task other) {
+        if (this.getStartTime() == null || other.getStartTime() == null) {
+            return false;
+        }
+        if (this.getStartTime().isEqual(other.getStartTime())) {
+            return true;
+        }
+        // startTime != null, but duration == null
         if (this.getEndTime() == null || other.getEndTime() == null) {
             return false;
         }

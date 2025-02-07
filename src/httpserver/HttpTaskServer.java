@@ -1,12 +1,6 @@
 package httpserver;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonParser;
 import com.sun.net.httpserver.HttpServer;
-import gsonadapters.DurationAdapter;
-import gsonadapters.LocalDateTimeAdapter;
-import gsonadapters.SubtaskAdapter;
 import model.Epic;
 import model.Subtask;
 import model.Task;
@@ -52,7 +46,7 @@ public class HttpTaskServer {
         Epic epic = new Epic("epic1_name", "epic1_description");
         manager.createNewEpic(epic);
         Subtask subtask = manager.createNewSubtask(new Subtask("subtask1_name", "subtask1_description",
-                LocalDateTime.of(2025,1,1,10,0), null, epic));
+                LocalDateTime.of(2025,1,1,10,0), null, epic.getId()));
 
         HttpTaskServer server = new HttpTaskServer(manager);
         server.start();

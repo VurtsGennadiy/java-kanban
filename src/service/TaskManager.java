@@ -24,7 +24,7 @@ public interface TaskManager {
 
     Subtask getSubtask(Integer id);
 
-    ArrayList<Subtask> getSubtasksOfEpic(Integer epicId);
+    List<Subtask> getSubtasksOfEpic(Integer epicId);
 
     Task createNewTask(Task task);
 
@@ -34,7 +34,15 @@ public interface TaskManager {
 
     void updateTask(Task updatedTask);
 
+    void updateSubtask(Subtask updatedSubtask);
+
+    void updateEpic(Epic updatedEpic);
+
     void removeTask(Integer id);
+
+    void removeSubtask(Integer id);
+
+    void removeEpic(Integer id);
 
     List<Task> getHistory();
 

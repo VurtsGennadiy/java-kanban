@@ -64,7 +64,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             joiner.add(task.getDuration() != null ?
                     String.valueOf(task.getDuration().get(ChronoUnit.SECONDS)) : "null");
             if (task.getType() == TaskType.SUBTASK) {
-                joiner.add(String.valueOf(((Subtask) task).getEpic().getId()));
+                joiner.add(String.valueOf(((Subtask) task).getEpicId()));
             }
         }
         return joiner.toString();
@@ -91,8 +91,8 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 case TASK -> task = new Task(name, description, startTime, duration);
                 case SUBTASK -> {
                     int epicId = Integer.parseInt(fields[7]);
-                    Epic epicOfSubtask = this.getEpic(epicId);
-                    task = new Subtask(name, description, startTime, duration, epicOfSubtask);
+                    //Epic epicOfSubtask = this.getEpic(epicId);
+                    task = new Subtask(name, description, startTime, duration, epicId);
                 }
                 case EPIC -> task = new Epic(name, description);
             }
@@ -162,8 +162,32 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     }
 
     @Override
+    public void updateEpic(Epic updatedEpic) {
+        super.updateEpic(updatedEpic);
+        save();
+    }
+
+    @Override
+    public void updateSubtask(Subtask updatedSubtask) {
+        super.updateSubtask(updatedSubtask);
+        save();
+    }
+
+    @Override
     public void removeTask(Integer id) {
         super.removeTask(id);
+        save();
+    }
+
+    @Override
+    public void removeEpic(Integer id) {
+        super.removeEpic(id);
+        save();
+    }
+
+    @Override
+    public void removeSubtask(Integer id) {
+        super.removeSubtask(id);
         save();
     }
 
@@ -193,14 +217,12 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             System.out.println(ex.getMessage());
         }
         FileBackedTaskManager manager1 = FileBackedTaskManager.loadFromFile(path);
-        manager1.createNewTask(new Task());
         Task task = new Task("Task1_Name","Task1_Description");
-        Epic epic = new Epic("Epic1_Name", "Epic_Of_One_Subtask");
-        Subtask subtask = new Subtask("Subtask1_Name", "Subtask1_Of_Epic1", epic);
-
         manager1.createNewTask(task);
-        manager1.createNewSubtask(subtask);
+        Epic epic = new Epic("Epic1_Name", "Epic_Of_One_Subtask");
         manager1.createNewEpic(epic);
+        Subtask subtask = new Subtask("Subtask1_Name", "Subtask1_Of_Epic1", epic.getId());
+        manager1.createNewSubtask(subtask);
 
         List<Task> tasksManager1 = new ArrayList<>(manager1.getAllTasks());
         tasksManager1.addAll(manager1.getAllEpics());

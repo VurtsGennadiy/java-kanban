@@ -6,9 +6,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.nio.file.Path;
-import java.util.List;
 
 public class Demonstration {
     TaskManager manager;
@@ -46,13 +44,13 @@ public class Demonstration {
         System.out.println();
 
         System.out.println("***** Удаляем подзадачу из эпика id=4, проверяем историю *****");
-        manager.removeTask(4);
+        manager.removeSubtask(4);
         printAllTasks();
         printHistory();
         System.out.println();
 
         System.out.println("***** Удаляем эпик из 3-х подзадач id=2, проверяем историю *****");
-        manager.removeTask(2);
+        manager.removeEpic(2);
         printAllTasks();
         printHistory();
         System.out.println();
@@ -65,24 +63,19 @@ public class Demonstration {
     }
 
     void createTasks() {
-        Task task1 = new Task("Task1_Name", "Task1_Description",
-                LocalDateTime.of(2025, 1, 1, 10, 0), Duration.ofMinutes(30));
-        Task task2 = new Task("Task2_Name", "Task2_Description");
+        manager.createNewTask(new Task("Task1_Name", "Task1_Description",
+                LocalDateTime.of(2025, 1, 1, 10, 0), Duration.ofMinutes(30)));
+        manager.createNewTask(new Task("Task2_Name", "Task2_Description"));
 
-        Epic epicWith3subs = new Epic("epicWith3subs", "Epic_Of_Three_Subtasks",
-                new ArrayList<>(List.of(
-                        new Subtask("Subtask1_Name", "Subtask1_OfEpic1",
-                                LocalDateTime.of(2025, 1, 2, 9, 0), Duration.ofHours(1)),
-                        new Subtask("Subtask2_Name", "Subtask2_OfEpic1",
-                                LocalDateTime.of(2025, 1, 3, 10, 0), Duration.ofDays(1)),
-                        new Subtask("Subtask3_Name", "Subtask3_OfEpic1")
-                )));
-        Epic emptyEpic = new Epic("emptyEpic", "Empty_Subtasks_List");
+        Epic epicWith3subs = manager.createNewEpic(new Epic("epicWith3subs", "Epic_Of_Three_Subtasks"));
+        int epicId = epicWith3subs.getId();
 
-        manager.createNewTask(task1);
-        manager.createNewTask(task2);
-        manager.createNewEpic(epicWith3subs);
-        manager.createNewEpic(emptyEpic);
+        manager.createNewSubtask(new Subtask("Subtask1_Name", "Subtask1_OfEpic1",
+                LocalDateTime.of(2025, 1, 2, 9, 0), Duration.ofHours(1), epicId));
+        manager.createNewSubtask(new Subtask("Subtask2_Name", "Subtask2_OfEpic1",
+                LocalDateTime.of(2025, 1, 3, 10, 0), Duration.ofDays(1), epicId));
+        manager.createNewSubtask(new Subtask("Subtask3_Name", "Subtask3_OfEpic1", epicId));
+        manager.createNewEpic(new Epic("emptyEpic", "Empty_Subtasks_List"));
     }
 
     void printAllTasks() {

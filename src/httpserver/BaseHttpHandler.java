@@ -6,8 +6,6 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import gsonadapters.DurationAdapter;
 import gsonadapters.LocalDateTimeAdapter;
-import gsonadapters.SubtaskAdapter;
-import model.Subtask;
 import service.TaskManager;
 
 import java.io.IOException;
@@ -23,7 +21,6 @@ abstract class BaseHttpHandler implements HttpHandler {
     protected Gson gson;
     public static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
 
-    // ТЗ
     public void sendText(HttpExchange exchange, String text) {
         try (exchange; OutputStream os = exchange.getResponseBody()) {
             exchange.sendResponseHeaders(200, 0);
@@ -35,7 +32,6 @@ abstract class BaseHttpHandler implements HttpHandler {
         }
     }
 
-    // ТЗ
     protected void sendNotFound(HttpExchange exchange) {
         try (exchange; OutputStream os = exchange.getResponseBody()) {
             exchange.sendResponseHeaders(404, 0);
@@ -45,12 +41,10 @@ abstract class BaseHttpHandler implements HttpHandler {
         }
     }
 
-    // ТЗ
-    // TODO
-    public void sendHasIntersections(HttpExchange exchange) {
+    public void sendNotAcceptable(HttpExchange exchange, String text) {
         try (exchange; OutputStream os = exchange.getResponseBody()) {
             exchange.sendResponseHeaders(406, 0);
-            os.write("Невозможно добавить задачу, есть пересечение по времени.".getBytes(DEFAULT_CHARSET));
+            os.write(text.getBytes(DEFAULT_CHARSET));
         } catch (Exception e) {
             System.out.println("Ошибка отправки ответа от сервера");
         }
@@ -71,7 +65,6 @@ abstract class BaseHttpHandler implements HttpHandler {
                 .setPrettyPrinting()
                 .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
                 .registerTypeAdapter(Duration.class, new DurationAdapter())
-                .registerTypeAdapter(Subtask.class, new SubtaskAdapter())
                 .create();
     }
 

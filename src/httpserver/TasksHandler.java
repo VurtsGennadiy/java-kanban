@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.net.httpserver.HttpExchange;
 import exceptions.TaskHasIntersectException;
+import exceptions.TaskNotFoundException;
 import model.Task;
 import service.TaskManager;
 
@@ -50,11 +51,11 @@ public class TasksHandler extends BaseHttpHandler {
     }
 
     private void handleGetTaskById(int id, HttpExchange exchange) {
-        Task task = taskManager.getTask(id);
-        if (task == null) {
-            sendNotFound(exchange);
-        } else {
+        try {
+            Task task = taskManager.getTask(id);
             sendText(exchange, gson.toJson(task));
+        } catch (TaskNotFoundException exception) {
+            sendNotFound(exchange);
         }
     }
 
@@ -68,21 +69,26 @@ public class TasksHandler extends BaseHttpHandler {
         JsonObject inputJson = JsonParser.parseString(body).getAsJsonObject();
         JsonElement inputId = inputJson.get("id");
         Task task = gson.fromJson(inputJson, Task.class);
-        if (inputId == null) {
-            try {
+        try {
+            if (inputId == null) {
                 taskManager.createNewTask(task);
-            } catch (TaskHasIntersectException exception) {
-                sendHasIntersections(exchange);
-                return;
+            } else {
+                taskManager.updateTask(task);
             }
-        } else {
-            taskManager.updateTask(task);
+            sendEmpty(exchange, 201);
+        } catch (TaskHasIntersectException exception) {
+            sendNotAcceptable(exchange, exception.getMessage());
+        } catch (TaskNotFoundException exception) {
+            sendNotFound(exchange);
         }
-        sendEmpty(exchange, 201);
     }
 
-    private void handleDeleteTask(int id, HttpExchange exchange) throws IOException {
-        taskManager.removeTask(id);
-        sendEmpty(exchange, 200);
+    private void handleDeleteTask(int id, HttpExchange exchange) {
+        try {
+            taskManager.removeTask(id);
+            sendEmpty(exchange, 200);
+        } catch (TaskNotFoundException exception) {
+            sendNotFound(exchange);
+        }
     }
 }
