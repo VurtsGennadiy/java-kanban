@@ -9,7 +9,7 @@ import java.net.InetSocketAddress;
 import java.nio.file.Paths;
 
 public class HttpTaskServer {
-    public final int PORT = 8080;
+    public static final int PORT = 8080;
     private final HttpServer server;
 
     public HttpTaskServer(TaskManager manager) throws IOException {
