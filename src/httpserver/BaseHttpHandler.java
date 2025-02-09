@@ -34,7 +34,7 @@ abstract class BaseHttpHandler implements HttpHandler {
     }
 
     @Override
-    abstract public void handle(HttpExchange exchange) throws IOException;
+    public abstract void handle(HttpExchange exchange) throws IOException;
 
     public void sendText(HttpExchange exchange, String text) {
         try (exchange; OutputStream os = exchange.getResponseBody()) {
