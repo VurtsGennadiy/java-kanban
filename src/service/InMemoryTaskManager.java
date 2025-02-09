@@ -146,8 +146,7 @@ public class InMemoryTaskManager implements TaskManager {
         if (tasks.containsKey(id)) {
             if (updatePrioritizedTaskSet(updatedTask)) {
                 tasks.put(id, updatedTask);
-            }
-            else {
+            } else {
                 throw new TaskHasIntersectException("Задача пересекается во времени с существующими задачами");
             }
         } else {
@@ -162,8 +161,7 @@ public class InMemoryTaskManager implements TaskManager {
             if (updatePrioritizedTaskSet(updatedSubtask)) {
                 subtasks.put(id, updatedSubtask);
                 checkEpicStatus(updatedSubtask.getEpicId());
-            }
-            else {
+            } else {
                 throw new TaskHasIntersectException("Подзадача пересекается во времени с существующими задачами");
             }
         } else {
