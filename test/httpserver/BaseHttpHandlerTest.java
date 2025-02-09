@@ -40,9 +40,9 @@ abstract public class BaseHttpHandlerTest {
     Path filePath;
 
     BaseHttpHandlerTest(String path) throws IOException {
-        filePath = Paths.get("res","test_manager.csv");
-        //manager = Managers.getFileBackedTaskManager(filePath);
-        manager = Managers.getDefault();
+        filePath = Paths.get("test","test_manager.csv");
+        manager = Managers.getFileBackedTaskManager(filePath);
+        //manager = Managers.getDefault();
         server = new HttpTaskServer(manager);
         gson = new GsonBuilder()
                 .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
@@ -69,7 +69,7 @@ abstract public class BaseHttpHandlerTest {
     @AfterEach
     public void shutDown() throws IOException {
         server.stop();
-        //Files.deleteIfExists(filePath);
+        Files.deleteIfExists(filePath);
     }
 
     @Test

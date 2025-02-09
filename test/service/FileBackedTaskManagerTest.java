@@ -20,7 +20,7 @@ public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskMan
     Path path;
 
     FileBackedTaskManagerTest() throws IOException {
-        path = Paths.get("res","fileBackedTaskManagerTest.csv");
+        path = Paths.get("test","fileBackedTaskManagerTest.csv");
     }
 
     @BeforeEach
