@@ -91,7 +91,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 case TASK -> task = new Task(name, description, startTime, duration);
                 case SUBTASK -> {
                     int epicId = Integer.parseInt(fields[7]);
-                    //Epic epicOfSubtask = this.getEpic(epicId);
                     task = new Subtask(name, description, startTime, duration, epicId);
                 }
                 case EPIC -> task = new Epic(name, description);
@@ -113,7 +112,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         }
         try  (BufferedReader reader = new BufferedReader(new FileReader(path.toString(), StandardCharsets.UTF_8))) {
             reader.readLine(); // skip title string
-            int taskIdMaxValue = -1;
+            int taskIdMaxValue = 0;
             while (reader.ready()) {
                 String line = reader.readLine();
                 Task task = manager.fromString(line);

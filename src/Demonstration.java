@@ -58,7 +58,7 @@ public class Demonstration {
         try {
             Files.delete(Path.of("Demonstration.csv"));
         } catch (IOException e) {
-            e.printStackTrace();;
+            e.printStackTrace();
         }
     }
 

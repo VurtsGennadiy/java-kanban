@@ -19,12 +19,24 @@ import static org.junit.jupiter.api.Assertions.*;
 public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskManager> {
     Path path;
 
+    FileBackedTaskManagerTest() throws IOException {
+        path = Paths.get("res","fileBackedTaskManagerTest.csv");
+    }
+
     @BeforeEach
     @Override
     void init() {
-        super.init();
-        path = Paths.get("fileBackedTaskManagerTest.csv");
         manager = FileBackedTaskManager.loadFromFile(path);
+        super.init();
+    }
+
+    @AfterEach
+    void tearDown() {
+        try {
+            Files.delete(path);
+        } catch (IOException ex) {
+            System.out.println(ex.getMessage());
+        }
     }
 
     @Test
@@ -341,8 +353,8 @@ public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskMan
     @Test
     void saveInFile() throws IOException {
         String expectedTitleString = "id,type,name,status,description,startTime,duration,epic";
-        String expectedTaskString = manager.toString(task);
         manager.createNewTask(task);
+        String expectedTaskString = manager.toString(task);
 
         assertTrue(Files.exists(path), "Файл не сохранился на диске");
         BufferedReader reader = new BufferedReader(new FileReader(path.toString()));
@@ -377,14 +389,5 @@ public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskMan
         assertEquals(task, manager.getAllTasks().getFirst());
         assertEquals(epic, manager.getAllEpics().getFirst());
         assertEquals(subtask, manager.getAllSubtasks().getFirst());
-    }
-
-    @AfterEach
-    void tearDown() {
-        try {
-            Files.delete(path);
-        } catch (IOException ex) {
-            System.out.println(ex.getMessage());
-        }
     }
 }

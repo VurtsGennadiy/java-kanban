@@ -1,24 +1,16 @@
 package httpserver;
 
 import com.sun.net.httpserver.HttpServer;
-import model.Epic;
-import model.Subtask;
-import model.Task;
 import service.Managers;
 import service.TaskManager;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.time.Duration;
-import java.time.LocalDateTime;
+import java.nio.file.Paths;
 
 public class HttpTaskServer {
     public final int PORT = 8080;
     private final HttpServer server;
-
-    public HttpTaskServer() throws IOException {
-        this(Managers.getDefault());
-    }
 
     public HttpTaskServer(TaskManager manager) throws IOException {
         server = HttpServer.create(new InetSocketAddress("localhost", PORT), 0);
@@ -27,6 +19,10 @@ public class HttpTaskServer {
         server.createContext("/subtasks", new SubtasksHandler(manager));
         server.createContext("/history", new HistoryHandler(manager));
         server.createContext("/prioritized", new PrioritizedTasksHandler(manager));
+    }
+
+    public HttpTaskServer() throws IOException {
+        this(Managers.getDefault());
     }
 
     public void start() {
@@ -39,16 +35,17 @@ public class HttpTaskServer {
         System.out.println("HTTP сервер остановлен.");
     }
 
-    public static void main(String[] args) throws IOException {
-        TaskManager manager = Managers.getDefault();
-        Task task = manager.createNewTask(new Task("Task1_name", "Task1_description",
-                LocalDateTime.of(2025, 1, 2, 10, 0), Duration.ofHours(1)));
-        Epic epic = new Epic("epic1_name", "epic1_description");
-        manager.createNewEpic(epic);
-        Subtask subtask = manager.createNewSubtask(new Subtask("subtask1_name", "subtask1_description",
-                LocalDateTime.of(2025,1,1,10,0), null, epic.getId()));
+    public InetSocketAddress getAddress() {
+        return server.getAddress();
+    }
 
-        HttpTaskServer server = new HttpTaskServer(manager);
-        server.start();
+    public static void main(String[] args) {
+        TaskManager manager = Managers.getFileBackedTaskManager(Paths.get("res","tasks.csv"));
+        try {
+            HttpTaskServer server = new HttpTaskServer(manager);
+            server.start();
+        } catch (IOException e) {
+            System.out.println("Ошибка создания веб сервера. " + e.getMessage());
+        }
     }
 }

@@ -6,8 +6,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 public class EpicTest {
     @Test

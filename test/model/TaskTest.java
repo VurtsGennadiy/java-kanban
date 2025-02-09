@@ -39,7 +39,7 @@ public class TaskTest {
 
     @Test
     void throwExceptionWhenTaskDurationIsNegativeOrZero() {
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThrows(IllegalArgumentException.class, () ->  {
             new Task("Name", "Description", LocalDateTime.now(), Duration.ofHours(-1));
         }, "Продолжительность задачи не может быть отрицательная");
         assertThrows(IllegalArgumentException.class, () -> {
