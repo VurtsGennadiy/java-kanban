@@ -2,8 +2,13 @@ package httpserver;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import exceptions.ManagerCreateTaskException;
+import exceptions.ManagerSaveException;
+import exceptions.TaskHasIntersectException;
+import exceptions.TaskNotFoundException;
 import gsonadapters.DurationAdapter;
 import gsonadapters.LocalDateTimeAdapter;
 import gsonadapters.TaskDeserializer;
@@ -34,7 +39,48 @@ abstract class BaseHttpHandler implements HttpHandler {
     }
 
     @Override
-    public abstract void handle(HttpExchange exchange) throws IOException;
+    public void handle(HttpExchange exchange) throws IOException {
+        String method = exchange.getRequestMethod();
+        try {
+            switch (method) {
+                case "GET" -> processGet(exchange);
+                case "POST" -> processPost(exchange);
+                case "DELETE" -> processDelete(exchange);
+                default -> sendNotAllowed(exchange);
+            }
+        } catch (TaskNotFoundException exception) {
+            sendNotFound(exchange);
+        } catch (TaskHasIntersectException | ManagerCreateTaskException exception) {
+            sendNotAcceptable(exchange, exception.getMessage());
+        } catch (JsonSyntaxException | IllegalStateException exception) {
+            sendNotAcceptable(exchange, "Некорректное тело запроса");
+        } catch (ManagerSaveException exception) {
+            sendInternalServerError(exchange);
+        }
+    }
+
+    protected void processGet(HttpExchange exchange) {
+        sendNotAllowed(exchange);
+    }
+
+    protected void processPost(HttpExchange exchange) throws IOException {
+        sendNotAllowed(exchange);
+    }
+
+    protected void processDelete(HttpExchange exchange) {
+        sendNotAllowed(exchange);
+    }
+
+    public abstract String getAllowedMethods();
+
+    public void sendNotAllowed(HttpExchange exchange) {
+        try (exchange) {
+            exchange.getResponseHeaders().add("Allow", getAllowedMethods());
+            exchange.sendResponseHeaders(405, 0);
+        } catch (IOException exception) {
+            System.out.println("Ошибка отправки ответа от сервера");
+        }
+    }
 
     public void sendText(HttpExchange exchange, String text) {
         try (exchange; OutputStream os = exchange.getResponseBody()) {

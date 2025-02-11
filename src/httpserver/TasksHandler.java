@@ -3,11 +3,7 @@ package httpserver;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.gson.JsonSyntaxException;
 import com.sun.net.httpserver.HttpExchange;
-import exceptions.ManagerSaveException;
-import exceptions.TaskHasIntersectException;
-import exceptions.TaskNotFoundException;
 import model.Task;
 import service.TaskManager;
 
@@ -22,57 +18,28 @@ public class TasksHandler extends BaseHttpHandler {
     }
 
     @Override
-    public void handle(HttpExchange exchange) throws IOException {
-        String method = exchange.getRequestMethod();
+    protected void processGet(HttpExchange exchange) {
         String path = exchange.getRequestURI().getPath();
-        /*
-            get/ getAllTask 200
-            get/id getTaskById 200 404
-            post/ body id+ createTask 201 406
-            post/ body id- updateTask 201 406
-            delete/id deleteTask 200 404
-         */
-        try {
-            if (Pattern.matches("^/tasks/\\d+$", path)) {
-                String pathId = path.replaceFirst("/tasks/", "");
-                int id = Integer.parseInt(pathId);
-
-                switch (method) {
-                    case "GET" -> handleGetTaskById(id, exchange);
-                    case "DELETE" -> handleDeleteTask(id, exchange);
-                    default -> sendNotFound(exchange);
-                }
-            } else if (Pattern.matches("^/tasks$", path)) {
-                switch (method) {
-                    case "GET" -> handleGetAllTasks(exchange);
-                    case "POST" -> handlePostTask(exchange);
-                    default -> sendNotFound(exchange);
-                }
-            } else {
-                sendNotFound(exchange);
-            }
-        } catch (TaskNotFoundException exception) {
-            sendNotFound(exchange);
-        } catch (TaskHasIntersectException exception) {
-            sendNotAcceptable(exchange, exception.getMessage());
-        } catch (JsonSyntaxException | IllegalStateException exception) {
-            sendNotAcceptable(exchange, "Некорректное тело запроса");
-        } catch (ManagerSaveException exception) {
-            sendInternalServerError(exchange);
+        if (Pattern.matches("^/tasks/\\d+$", path)) {
+            String pathId = path.replaceFirst("/tasks/", "");
+            int id = Integer.parseInt(pathId);
+            Task task = taskManager.getTask(id);
+            sendText(exchange, gson.toJson(task));
+        } else if (Pattern.matches("^/tasks$", path)) {
+            List<Task> tasks = taskManager.getAllTasks();
+            sendText(exchange, gson.toJson(tasks));
+        } else {
+            sendNotFound(exchange); // +
         }
     }
 
-    private void handleGetTaskById(int id, HttpExchange exchange) {
-        Task task = taskManager.getTask(id);
-        sendText(exchange, gson.toJson(task));
-    }
-
-    private void handleGetAllTasks(HttpExchange exchange) {
-        List<Task> tasks = taskManager.getAllTasks();
-        sendText(exchange, gson.toJson(tasks));
-    }
-
-    private void handlePostTask(HttpExchange exchange) throws IOException {
+    @Override
+    protected void processPost(HttpExchange exchange) throws IOException {
+        String path = exchange.getRequestURI().getPath();
+        if (!Pattern.matches("^/tasks$", path)) {
+            sendNotFound(exchange);
+            return;
+        }
         String body = new String(exchange.getRequestBody().readAllBytes(), DEFAULT_CHARSET);
         JsonObject inputJson = JsonParser.parseString(body).getAsJsonObject();
         JsonElement inputId = inputJson.get("id");
@@ -87,9 +54,22 @@ public class TasksHandler extends BaseHttpHandler {
         sendEmpty(exchange, 201);
     }
 
-    private void handleDeleteTask(int id, HttpExchange exchange) {
+    @Override
+    protected void processDelete(HttpExchange exchange) {
+        String path = exchange.getRequestURI().getPath();
+        if (!Pattern.matches("^/tasks/\\d+$", path)) {
+            sendNotFound(exchange);
+            return;
+        }
+        String pathId = path.replaceFirst("/tasks/", "");
+        int id = Integer.parseInt(pathId);
         taskManager.removeTask(id);
         sendEmpty(exchange, 200);
         System.out.println("Удалена задача id = " + id);
+    }
+
+    @Override
+    public String getAllowedMethods() {
+        return "GET, POST, DELETE";
     }
 }

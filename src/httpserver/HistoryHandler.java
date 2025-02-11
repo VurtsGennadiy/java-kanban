@@ -13,14 +13,18 @@ public class HistoryHandler extends BaseHttpHandler {
     }
 
     @Override
-    public void handle(HttpExchange exchange) {
-        String method = exchange.getRequestMethod();
+    protected void processGet(HttpExchange exchange) {
         String path = exchange.getRequestURI().getPath();
-        if (method.equals("GET") && Pattern.matches("^/history$", path)) {
-            List<Task> history = taskManager.getHistory();
-            sendText(exchange, gson.toJson(history));
-        } else {
+        if (!Pattern.matches("^/history$", path)) {
             sendNotFound(exchange);
+            return;
         }
+        List<Task> history = taskManager.getHistory();
+        sendText(exchange, gson.toJson(history));
+    }
+
+    @Override
+    public String getAllowedMethods() {
+        return "GET";
     }
 }

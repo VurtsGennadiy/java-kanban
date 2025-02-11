@@ -4,7 +4,6 @@ import com.sun.net.httpserver.HttpExchange;
 import model.Task;
 import service.TaskManager;
 
-import java.io.IOException;
 import java.util.SortedSet;
 import java.util.regex.Pattern;
 
@@ -14,14 +13,18 @@ public class PrioritizedTasksHandler extends BaseHttpHandler {
     }
 
     @Override
-    public void handle(HttpExchange exchange) throws IOException {
-        String method = exchange.getRequestMethod();
+    protected void processGet(HttpExchange exchange) {
         String patch = exchange.getRequestURI().getPath();
-        if (method.equals("GET") && Pattern.matches("^/prioritized$", patch)) {
-            SortedSet<Task> prioritizedTasks = taskManager.getPrioritizedTasks();
-            sendText(exchange, gson.toJson(prioritizedTasks));
-        } else {
+        if (!Pattern.matches("^/prioritized$", patch)) {
             sendNotFound(exchange);
+            return;
         }
+        SortedSet<Task> prioritizedTasks = taskManager.getPrioritizedTasks();
+        sendText(exchange, gson.toJson(prioritizedTasks));
+    }
+
+    @Override
+    public String getAllowedMethods() {
+        return "GET";
     }
 }

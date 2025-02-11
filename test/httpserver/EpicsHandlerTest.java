@@ -14,6 +14,7 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -160,7 +161,7 @@ public class EpicsHandlerTest extends BaseHttpHandlerTest {
         assertEquals(404, response.statusCode());
     }
     
-    @Test
+/*    @Test
     @Override
     void invalidRequest() throws IOException, InterruptedException {
         super.invalidRequest();
@@ -174,5 +175,35 @@ public class EpicsHandlerTest extends BaseHttpHandlerTest {
 
         assertEquals(406, response4.statusCode());
         assertEquals(404, response5.statusCode());
+    }*/
+
+    @Test
+    @DisplayName("Некорректный адрес или метод запроса")
+    void invalidRequest() throws IOException, InterruptedException {
+        URI uri1 = URI.create(BASE_URL + "/abc");
+        URI uri2 = URI.create(BASE_URL + "/1");
+        URI uri3 = URI.create(BASE_URL);
+        URI uri6 = URI.create(BASE_URL + "/0/subtasks/");
+
+        HttpRequest request1 = HttpRequest.newBuilder(uri1).GET().build();
+        HttpRequest request2 = HttpRequest.newBuilder(uri2).POST(HttpRequest.BodyPublishers.noBody()).build();
+        HttpRequest request3 = HttpRequest.newBuilder(uri3).DELETE().build();
+        HttpRequest request4 = HttpRequest.newBuilder(uri3).PUT(HttpRequest.BodyPublishers.noBody()).build();
+        HttpRequest request5 = HttpRequest.newBuilder(uri3).POST(HttpRequest.BodyPublishers.noBody()).build();
+        HttpRequest request6 = HttpRequest.newBuilder(uri6).GET().build();
+
+        HttpResponse<String> response1 = client.send(request1, HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> response2 = client.send(request2, HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> response3 = client.send(request3, HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> response4 = client.send(request4, HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> response5 = client.send(request5, HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> response6 = client.send(request6, HttpResponse.BodyHandlers.ofString());
+
+        assertEquals(404, response1.statusCode());
+        assertEquals(404, response2.statusCode());
+        assertEquals(404, response3.statusCode());
+        assertEquals(405, response4.statusCode());
+        assertEquals(406, response5.statusCode());
+        assertEquals(404, response6.statusCode());
     }
 }
