@@ -1,5 +1,7 @@
+import httpserver.HttpTaskServer;
+
 public class Main {
     public static void main(String[] args) {
-        new Demonstration().run();
+        HttpTaskServer.main(args);
     }
 }

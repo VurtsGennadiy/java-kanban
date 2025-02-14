@@ -19,12 +19,24 @@ import static org.junit.jupiter.api.Assertions.*;
 public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskManager> {
     Path path;
 
+    FileBackedTaskManagerTest() throws IOException {
+        path = Paths.get("test","fileBackedTaskManagerTest.csv");
+    }
+
     @BeforeEach
     @Override
     void init() {
-        super.init();
-        path = Paths.get("fileBackedTaskManagerTest.csv");
         manager = FileBackedTaskManager.loadFromFile(path);
+        super.init();
+    }
+
+    @AfterEach
+    void tearDown() {
+        try {
+            Files.delete(path);
+        } catch (IOException ex) {
+            System.out.println(ex.getMessage());
+        }
     }
 
     @Test
@@ -65,7 +77,6 @@ public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskMan
         try (BufferedReader reader = new BufferedReader(new FileReader(path.toString()))) {
             reader.readLine(); // skip title
             Epic recordEpic = (Epic) manager.fromString(reader.readLine());
-            Subtask recordSub = (Subtask) manager.fromString(reader.readLine());
 
             assertFalse(reader.ready(), "В файл записаны лишние строки");
             assertEquals(epic, recordEpic, "Epic некорректно сохранился в файл");
@@ -98,12 +109,11 @@ public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskMan
         try (BufferedReader reader = new BufferedReader(new FileReader(path.toString()))) {
             reader.readLine(); // skip title
             Epic recordEpic = (Epic) manager.fromString(reader.readLine());
-            Subtask recordSub = (Subtask) manager.fromString(reader.readLine());
 
             assertFalse(reader.ready(), "В файл записаны лишние строки");
             assertEquals(epic.getId(), recordEpic.getId(), "id задачи не должен измениться");
-            assertNotEquals(epic.getDescription(), recordEpic.getDescription(),
-                    "обновленный description не записался в файл");
+            assertEquals(epic.getName(), recordEpic.getName(),
+                    "обновленный name не записался в файл");
         } catch (IOException ex) {
             ex.printStackTrace();
         }
@@ -231,7 +241,7 @@ public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskMan
     @Test
     void taskToString() {
         String expectedStringFromTask = "0,TASK,Task1_Name,NEW,Task1_Description,1735718400,3600";
-        String expectedStringFromSubtask = "0,SUBTASK,Subtask1_Name,NEW,Subtask1_Of_Epic1,1735812000,1800,0";
+        String expectedStringFromSubtask = "0,SUBTASK,Subtask1_Name,NEW,Subtask1_Of_Epic1,1735812000,1800,-1";
         String expectedStringFromEpic = "0,EPIC,Epic1_Name,NEW,Epic_Of_One_Subtask";
 
         assertEquals(expectedStringFromTask, manager.toString(task));
@@ -283,7 +293,7 @@ public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskMan
         assertEquals("Epic1_Name", epic.getName());
         assertEquals("Epic_Without_Subtasks", epic.getDescription());
         assertEquals(TaskStatus.IN_PROGRESS, epic.getStatus());
-        assertTrue(epic.getSubtasks().isEmpty());
+        assertTrue(epic.getSubtasksId().isEmpty());
 
     }
 
@@ -297,7 +307,7 @@ public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskMan
         assertNull(epic.getName());
         assertNull(epic.getDescription());
         assertEquals(TaskStatus.IN_PROGRESS, epic.getStatus());
-        assertTrue(epic.getSubtasks().isEmpty());
+        assertTrue(epic.getSubtasksId().isEmpty());
     }
 
     @Test
@@ -329,7 +339,7 @@ public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskMan
         assertEquals(TaskStatus.DONE, subtask.getStatus());
         assertNull(subtask.getStartTime(), "Некорректно установлено поле startTime");
         assertNull(subtask.getDuration(), "Некорректно установлено поле duration");
-        assertNull(subtask.getEpic());
+        assertEquals(0, subtask.getEpicId());
     }
 
     @Test
@@ -343,8 +353,8 @@ public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskMan
     @Test
     void saveInFile() throws IOException {
         String expectedTitleString = "id,type,name,status,description,startTime,duration,epic";
-        String expectedTaskString = manager.toString(task);
         manager.createNewTask(task);
+        String expectedTaskString = manager.toString(task);
 
         assertTrue(Files.exists(path), "Файл не сохранился на диске");
         BufferedReader reader = new BufferedReader(new FileReader(path.toString()));
@@ -363,6 +373,7 @@ public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskMan
         task.setId(0);
         epic.setId(1);
         subtask.setId(2);
+        subtask.setEpicId(1);
         writer.write(manager.toString(task));
         writer.newLine();
         writer.write(manager.toString(epic));
@@ -378,14 +389,5 @@ public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskMan
         assertEquals(task, manager.getAllTasks().getFirst());
         assertEquals(epic, manager.getAllEpics().getFirst());
         assertEquals(subtask, manager.getAllSubtasks().getFirst());
-    }
-
-    @AfterEach
-    void tearDown() {
-        try {
-            Files.delete(path);
-        } catch (IOException ex) {
-            System.out.println(ex.getMessage());
-        }
     }
 }

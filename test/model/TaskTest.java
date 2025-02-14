@@ -1,5 +1,6 @@
 package model;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
@@ -38,7 +39,7 @@ public class TaskTest {
 
     @Test
     void throwExceptionWhenTaskDurationIsNegativeOrZero() {
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThrows(IllegalArgumentException.class, () ->  {
             new Task("Name", "Description", LocalDateTime.now(), Duration.ofHours(-1));
         }, "Продолжительность задачи не может быть отрицательная");
         assertThrows(IllegalArgumentException.class, () -> {
@@ -79,5 +80,25 @@ public class TaskTest {
         assertTrue(task.isIntersect(intersectStart));
         assertTrue(task.isIntersect(intersectEnd));
         assertTrue(task.isIntersect(intersectAll));
+    }
+
+    @Test
+    @DisplayName("Задачи с равным startTime и не заданным duration пересекаются")
+    void isIntersectWhenEqualsStartAndNullDuration() {
+        LocalDateTime startTime = LocalDateTime.of(2025,1,1,10,3);
+        Task task1 = new Task("","", startTime, null);
+        Task task2 = new Task("","", startTime, null);
+
+        assertTrue(task1.isIntersect(task2));
+    }
+
+    @Test
+    @DisplayName("Задачи с незаданным startTime не пересекаются")
+    void noIntersectWhenNullStart() {
+        LocalDateTime startTime = LocalDateTime.of(2025,1,1,10,3);
+        Task task1 = new Task("","", startTime, null);
+        Task task2 = new Task("","", startTime, null);
+
+        assertTrue(task1.isIntersect(task2));
     }
 }

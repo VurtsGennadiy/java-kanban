@@ -3,43 +3,38 @@ package model;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.StringJoiner;
 
 public class Epic extends Task {
-    private final ArrayList<Subtask> subtasks;
+    private final List<Integer> subtasksId;
     private LocalDateTime endTime;
 
     public Epic() {
-        subtasks = new ArrayList<>();
+        this("","");
     }
 
     public Epic(String name, String description) {
         super(name, description);
-        subtasks = new ArrayList<>();
-    }
-
-    public Epic(String name, String description, ArrayList<Subtask> subtasks) {
-        this(name, description);
-        subtasks.forEach(this::addSubtask);
+        subtasksId = new ArrayList<>();
     }
 
     public void addSubtask(Subtask subtask) {
-        if (subtask.getEpic() == this) {
-            return;
-        }
-        subtasks.add(subtask);
+        subtask.setEpicId(this.id);
+        subtasksId.add(subtask.getId());
         updateTime(subtask);
-        subtask.setEpic(this);
     }
 
-    public void updateSubtask(Subtask oldSubtask, Subtask newSubtask) {
-        subtasks.remove(oldSubtask);
-        removeTime(oldSubtask);
-        addSubtask(newSubtask);
+    public void removeSubtask(Subtask subtask) {
+        if (!subtasksId.contains(subtask.getId())) {
+            throw new IllegalArgumentException("Сабтаска с id = " + subtask.getId() + " не содержится в эпике");
+        }
+        subtasksId.remove(Integer.valueOf(subtask.getId())); // обертка Integer для удаления по содержимому, а не по индексу
+        removeTime(subtask);
     }
 
-    public ArrayList<Subtask> getSubtasks() {
-        return subtasks;
+    public List<Integer> getSubtasksId() {
+        return List.copyOf(subtasksId);
     }
 
     @Override
@@ -53,8 +48,8 @@ public class Epic extends Task {
         joiner.add("id=" + id);
         joiner.add("status='" + status + "'");
         joiner.add("name='" + name + "'");
-        joiner.add("description=" + (description == null ? "null" : description.length()));
-        joiner.add("subtasks.count=" + subtasks.size());
+        joiner.add("description.length=" + description.length());
+        joiner.add("subtasks.count=" + subtasksId.size());
         joiner.add("startTime=" + startTime);
         joiner.add("duration=" + duration);
         return joiner.toString();

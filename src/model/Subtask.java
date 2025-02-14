@@ -5,45 +5,36 @@ import java.time.LocalDateTime;
 import java.util.StringJoiner;
 
 public class Subtask extends Task {
-    private Epic epic;
+    private int epicId;
 
     public Subtask() {
+        this("","", null, null);
     }
 
     public Subtask(String name, String description) {
-        super(name, description);
-        epic = new Epic();
-        epic.addSubtask(this);
+        this(name, description, null, null);
     }
 
-    public Subtask(String name, String description, Epic epic) {
-        super(name, description);
-        setEpic(epic);
+    public Subtask(String name, String description, int epicId) {
+        this(name, description, null, null, epicId);
     }
 
     public Subtask(String name, String description, LocalDateTime startTime, Duration duration) {
         super(name, description, startTime, duration);
-        epic = new Epic();
-        epic.addSubtask(this);
+        epicId = -1;
     }
 
-    public Subtask(String name, String description, LocalDateTime startTime, Duration duration, Epic epic) {
+    public Subtask(String name, String description, LocalDateTime startTime, Duration duration, int epicId) {
         super(name, description, startTime, duration);
-        setEpic(epic);
+        this.epicId = epicId;
     }
 
-    public Epic getEpic() {
-        return epic;
+    public int getEpicId() {
+        return epicId;
     }
 
-    public void setEpic(Epic epic) {
-        // проверяем что метод вызван не из Epic
-        StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
-        boolean fromEpic = stackTrace[2].getClassName().equals(Epic.class.getName());
-        if (!fromEpic && epic != null) {
-            epic.addSubtask(this);
-        }
-        this.epic = epic;
+    public void setEpicId(int epicId) {
+        this.epicId = epicId;
     }
 
     @Override
@@ -55,10 +46,10 @@ public class Subtask extends Task {
     public String toString() {
         StringJoiner joiner = new StringJoiner(", ", "Subtask{", "}");
         joiner.add("id=" + id);
-        joiner.add("EpicId=" + (epic == null ? "null" : epic.getId()));
+        joiner.add("EpicId=" + epicId);
         joiner.add("status='" + status + "'");
         joiner.add("name='" + name + "'");
-        joiner.add("description=" + (description == null ? "null" : description.length()));
+        joiner.add("description.length=" + description.length());
         joiner.add("startTime=" + startTime);
         joiner.add("duration=" + duration);
         return joiner.toString();

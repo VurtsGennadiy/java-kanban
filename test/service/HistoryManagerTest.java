@@ -19,7 +19,7 @@ public class HistoryManagerTest {
         historyManager = Managers.getDefaultHistory();
         task = new Task("Task1_Name","Task1_Description");
         epic = new Epic("Epic1_Name", "Epic_Of_One_Subtask");
-        subtask = new Subtask("Subtask1_Name", "Subtask1_Of_Epic1", epic);
+        subtask = new Subtask("Subtask1_Name", "Subtask1_Of_Epic1", 2);
         task.setId(1);
         epic.setId(2);
         subtask.setId(3);
